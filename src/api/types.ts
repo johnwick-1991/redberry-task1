@@ -1,12 +1,10 @@
-// Kino XII API types, taken from the Swagger docs (OAS 1.0.0).
-// Fields marked "// VERIFY" were cut off in the docs PDF. Confirm them with one
-// real response from "Try it out" before relying on them.
+// Types for the Kino XII API. Shapes were checked against live responses
+// (filter-options, sessions, movie detail, seat map) and the Swagger examples.
 
-// ---------- Shared ----------
 export type Slug = string;
-export type ISODate = string;      // "2026-10-01"
-export type ISODateTime = string;  // "2026-10-01T10:00:00+00:00"
-export type Lari = number;         // plain number: 24, 14.5
+export type ISODate = string; // "2026-10-01"
+export type ISODateTime = string; // "2026-10-01T10:00:00+00:00"
+export type Lari = number; // plain number: 24, 14.5
 
 export interface ApiResponse<T> {
   data: T;
@@ -15,15 +13,15 @@ export interface ApiResponse<T> {
 // ---------- Catalogue ----------
 export interface Format {
   id: number;
-  slug: Slug;          // "standard" | "max" | "atmos" | ...
-  name: string;        // "MAX"
-  priceUplift: Lari;   // added on top of the session base price
+  slug: Slug;
+  name: string;
+  priceUplift: Lari;
 }
 
 export interface Language {
   id: number;
-  slug: Slug;          // "georgian-dub" | ...
-  name: string;        // "Georgian Dub"
+  slug: Slug;
+  name: string;
 }
 
 export interface Genre {
@@ -33,9 +31,9 @@ export interface Genre {
 }
 
 export interface AgeRating {
-  code: string;        // "G" | "PG" | "12+" | "16+" | "18+"
-  minAge: number;      // 16
-  description: string; // explanation shown on the film page
+  code: string; // "G" | "PG" | "12+" | "16+" | "18+"
+  minAge: number;
+  description: string;
 }
 
 export interface VenueRef {
@@ -46,61 +44,63 @@ export interface VenueRef {
 }
 
 export interface Venue extends VenueRef {
-  formats: Format[];   // what this venue can actually show -> narrows the format filter
+  formats: Format[];
 }
 
 export interface Movie {
   id: number;
   slug: string;
   title: string;
-  kind: "film" | string; // VERIFY: likely "film" | "event" (home page lists films AND events)
+  kind: string;
   runtimeMinutes: number;
-  posterUrl: string;
-  backdropUrl: string;
+  posterUrl: string | null;
+  backdropUrl: string | null;
   releaseDate: ISODate;
   isComingSoon: boolean;
-  isNotified: boolean;   // already pressed "Notify Me"
+  isNotified: boolean;
   isFeatured: boolean;
-  fromPrice: Lari | null; // VERIFY: likely null for coming-soon titles
+  fromPrice: Lari | null;
   ageRating: AgeRating;
   genres: Genre[];
+  formats?: Format[];
 }
 
-// VERIFY: GET /movies/{movie} returns extra fields for the details page
 export interface MovieDetail extends Movie {
-  description: string;   // VERIFY
-  director: string;      // VERIFY
-  cast: string[];        // VERIFY: may be objects
-  formats: Format[];     // seen in the /tickets example
+  synopsis: string | null;
+  director: string | null;
+  cast: string | null; // comma separated
+  formats: Format[];
+  availableDates?: ISODate[];
 }
 
 // ---------- Filter options ----------
-// Only `venues` was visible in the docs; the other keys are named per the docs text.
 export interface TicketTypeOption {
-  slug: "adult" | "student" | "child" | string;
+  id: number;
+  slug: string; // adult | child | student
   name: string;
-  ratio: number;          // VERIFY name: 1 / 0.75 / 0.6
-  blockedMinAge?: number; // VERIFY: child blocked when movie minAge >= 16
+  priceRatio: number;
+  note: string | null;
+  blockedFromRatingAge: number | null; // child: 16
 }
 
 export interface FilterOptions {
   venues: Venue[];
-  formats: Format[];                                  // VERIFY
-  languages: Language[];                              // VERIFY
-  bands: { slug: "morning" | "afternoon" | "evening"; name: string }[]; // VERIFY
-  sorts: { slug: string; name: string }[];            // VERIFY (default "time_asc")
-  ticketTypes: TicketTypeOption[];                    // VERIFY
-  ageRatings: AgeRating[];                            // VERIFY
-  maxSeatsPerOrder: number;                           // 3
-  holdMinutes: number;                                // 8
+  formats: Format[];
+  languages: Language[];
+  timeBands: { id: TimeBand; label: string }[];
+  sorts: { id: string; label: string }[];
+  ticketTypes: TicketTypeOption[];
+  ageRatings: AgeRating[];
+  maxSeatsPerOrder: number;
+  holdMinutes: number;
 }
 
 // ---------- Sessions ----------
-export type TimeBand = "morning" | "afternoon" | "evening";
+export type TimeBand = 'morning' | 'afternoon' | 'evening';
 
 export interface Hall {
   id: number;
-  name: string;          // "B"
+  name: string;
   venue?: VenueRef;
 }
 
@@ -108,69 +108,72 @@ export interface Session {
   id: number;
   startsAt: ISODateTime;
   date: ISODate;
-  time: string;          // "10:00"
+  time: string;
   timeBand: TimeBand;
   price: Lari;
-  seatsLeft: number;     // live: excludes sold AND held seats
-  isSoldOut: boolean;    // show disabled, never hide
+  seatsLeft: number;
+  isSoldOut: boolean;
   hall: Hall;
   venue: VenueRef;
   format: Format;
   language: Language;
-  movie?: Movie;         // present on GET /sessions/{id}
+  movie?: Movie;
 }
 
 export interface SessionsQuery {
-  date?: ISODate;        // single value, defaults to today
-  venues?: Slug[];       // sent as venues[]=a&venues[]=b
-  formats?: Slug[];
-  languages?: Slug[];
-  bands?: TimeBand[];
-  search?: string;
-  sort?: string;         // default "time_asc", e.g. "price_asc"
-  page?: number;
+  date: ISODate;
+  venues: Slug[];
+  formats: Slug[];
+  languages: Slug[];
+  bands: TimeBand[];
+  search: string;
+  sort: string;
+  page: number;
 }
 
 export interface SessionGroup {
   movie: Movie;
-  sessions: Session[];   // already sorted by start time
+  sessions: Session[];
+}
+
+export interface SessionsMeta {
+  currentPage: number;
+  lastPage: number;
+  perPage: number;
+  totalSessions: number;
+  totalMovies: number;
+  date: ISODate;
 }
 
 export interface SessionsResponse {
   data: SessionGroup[];
-  meta: {
-    currentPage: number;   // VERIFY
-    lastPage: number;      // pages over FILMS (10 per page)
-    totalMovies: number;
-    totalSessions: number; // "Showing X sessions"
-  };
+  meta: SessionsMeta;
 }
 
-// GET /movies/{movie}/sessions?date= -> grouped by venue
 export interface VenueSessionGroup {
-  venue: VenueRef;       // VERIFY shape
+  venue: VenueRef;
   sessions: Session[];
 }
 
 // ---------- Seat map ----------
-export type SeatState = "available" | "sold" | "held" | "unavailable";
+export type SeatState = 'available' | 'sold' | 'held' | 'unavailable';
 
 export interface Seat {
-  id: number;            // send as seatId when holding; never send code
-  code: string;          // "E7": price summary, order, ticket
-  label: string;         // "7": text inside the seat button
-  state: SeatState;      // "unavailable" = empty spacer, no button
-  aisleAfter: boolean;   // render a gangway spacer after this seat
-  isMine: boolean;       // part of my live hold -> restore selection
+  id: number;
+  code: string;
+  label: string;
+  state: SeatState;
+  aisleAfter: boolean;
+  isMine: boolean;
 }
 
 export interface SeatRow {
-  label: string;         // from data, may skip letters (G then J)
+  label: string;
   seats: Seat[];
 }
 
 export interface SeatSection {
-  name: string;          // "Front stalls", "Balcony", ...
+  name: string;
   rows: SeatRow[];
 }
 
@@ -193,11 +196,11 @@ export interface HeldSeat {
 }
 
 export interface SeatHold {
-  holdId: string;           // uuid
+  holdId: string;
   sessionId: number;
-  expiresAt: ISODateTime;   // drive the countdown from THIS
-  secondsRemaining: number; // do not count down from this
-  isLive: boolean;          // false = expired (still 200, unlike 404)
+  expiresAt: ISODateTime;
+  secondsRemaining: number;
+  isLive: boolean;
   subtotal: Lari;
   seats: HeldSeat[];
 }
@@ -207,8 +210,8 @@ export interface OrderRequest {
   fullName: string;
   email: string;
   mobileNumber: string;
-  cardNumber: string;    // spaces allowed
-  expiry: string;        // "MM/YY"
+  cardNumber: string;
+  expiry: string;
   cvv: string;
 }
 
@@ -221,20 +224,20 @@ export interface Ticket {
 
 export interface Order {
   id: number;
-  reference: string;     // "KX-7QF2LD": also the refund path param
-  status: "paid" | "refunded" | string;
+  reference: string;
+  status: string; // "paid" | "refunded"
   totalPrice: Lari;
   paidAt: ISODateTime;
   refundedAt: ISODateTime | null;
   isUpcoming: boolean;
-  isRefundable: boolean; // drive the Refund button from this, never compute the cutoff
+  isRefundable: boolean;
   cardLastFour: string;
   contact: { fullName: string; email: string; mobileNumber: string };
-  session: Session & { movie: MovieDetail };
+  session: Session & { movie?: Movie };
   tickets: Ticket[];
 }
 
-export type TicketsFilter = "upcoming" | "past";
+export type TicketsFilter = 'upcoming' | 'past';
 
 // ---------- Auth / profile ----------
 export interface User {
@@ -245,9 +248,9 @@ export interface User {
   fullName: string | null;
   mobileNumber: string | null;
   dateOfBirth: ISODate | null;
-  age: number | null;    // server-derived; use it for the age gate
+  age: number | null;
   preferredVenue: Venue | null;
-  profileComplete: boolean; // yellow/green navbar dot + booking gate
+  profileComplete: boolean;
 }
 
 export interface AuthResponse {
@@ -259,8 +262,8 @@ export interface RegisterRequest {
   username: string;
   email: string;
   password: string;
-  password_confirmation: string; // the only snake_case field
-  avatar?: File;                 // jpg/jpeg/png/webp, max 2MB
+  password_confirmation: string;
+  avatar?: File | null;
 }
 
 export interface LoginRequest {
@@ -270,23 +273,7 @@ export interface LoginRequest {
 
 export interface ProfileRequest {
   fullName: string;
-  mobileNumber: string;    // spaces OK
+  mobileNumber: string;
   dateOfBirth: ISODate;
-  preferredVenueId?: number;
-  avatar?: File;
-}
-
-// ---------- Errors ----------
-export interface ValidationErrorBody {
-  message: string;
-  errors: Record<string, string[]>;
-}
-
-export interface RuleErrorBody {
-  message: string;         // already user-facing: show as-is
-}
-
-export interface ConflictErrorBody {
-  message: string;
-  contested: string[];     // seat CODES, e.g. ["E7","E8"]
+  preferredVenueId?: number | null;
 }
