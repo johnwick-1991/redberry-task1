@@ -1,32 +1,51 @@
-# React + TypeScript + Vite
+# Kino XII
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+Cinema booking app for Redberry Bootcamp XII: browse films, pick a session in one of four venues, choose seats, hold them for 8 minutes and pay.
 
-Currently, two official plugins are available:
+**Stack:** React 19 · TypeScript · Vite · Tailwind CSS v4 · React Router · TanStack Query · Zustand · react-hook-form + zod
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## Running locally
 
-## React Compiler
-
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
-
-## Expanding the Oxlint configuration
-
-If you are developing a production application, we recommend enabling type-aware lint rules by installing `oxlint-tsgolint` and editing `.oxlintrc.json`:
-
-```json
-{
-  "$schema": "./node_modules/oxlint/configuration_schema.json",
-  "plugins": ["react", "typescript", "oxc"],
-  "options": {
-    "typeAware": true
-  },
-  "rules": {
-    "react/rules-of-hooks": "error",
-    "react/only-export-components": ["warn", { "allowConstantExport": true }]
-  }
-}
+```bash
+npm install
+cp .env.example .env   # VITE_API_URL=https://api.kinoxii.redberryinternship.ge/api
+npm run dev
 ```
 
-See the [Oxlint rules documentation](https://oxc.rs/docs/guide/usage/linter/rules) for the full list of rules and categories.
+`npm run build` creates the production build, and `npm test` runs the logic tests.
+
+Test account: `jane@kinoxii.test` / `password` (complete profile, tickets in both tabs). Test card: `4242 4242 4242 4242`, any future expiry, any 3-digit CVV.
+
+## Deploy (Netlify)
+
+Connect the repository. `netlify.toml` already sets the build command, `dist` as the publish folder and the SPA fallback, so deep links like `/sessions?date=…` survive a refresh. Add `VITE_API_URL` under Site settings → Environment variables.
+
+## Project structure
+
+```
+src/
+  api/          axios client, endpoints, query hooks, error parsing, types
+  store/        auth, auth modal + pending actions, booking (hold persistence), toasts
+  lib/          validation schemas, guards (auth / profile / age), formatting
+  components/   UI kit (Modal, Field, Button, States, Pagination, DateStrip) and layout
+  features/     auth, home, sessions, movie, booking, profile
+```
+
+## Notable behaviour
+
+- **Protected actions continue after login.** Guarded actions (Select Seats, Notify Me, My Tickets, Profile) are queued as pending and run automatically after login or sign-up. A 401 from any request parks that request, opens the login modal, and replays it with the new token, so the user never clicks twice.
+- **The sessions page lives in the URL** (`?venue=galleria,batumi&date=…&format=max&sort=price_asc&page=2`). Refresh, copy-paste and Back/Forward all restore the view. Any filter or sort change resets to page 1. Choosing venues narrows the formats and drops formats those venues don't offer.
+- **Nothing is hardcoded.** Venues, formats, languages, time bands, sorts, ticket types and their price ratios, the seat cap and the hold length all come from `GET /filter-options`.
+- **The hall map is drawn from the API.** It follows sections → rows → seats, takes row labels from the data, keeps gaps for `unavailable` spots, and uses `aisleAfter` for gangways.
+- **Booking flow:**
+  - Holds: re-holding replaces the previous hold, and the countdown runs from `expiresAt`, so it doesn't drift.
+  - 409 handling: lost seats are named, marked sold and dropped, the rest of the selection is kept, and the map is refetched.
+  - Expiry: when the hold runs out, the modal resets to step 1 with a message.
+  - Close: closing without paying releases the hold.
+  - Refresh mid-checkout: the hold is read back with `GET /holds/{id}`, so a refresh doesn't lose the seats.
+- **Errors:**
+  - 422 with `errors` is mapped onto fields; 422 with only a message is shown as-is.
+  - 500s and network failures show a retry.
+  - Every list has loading skeletons and an empty state.
+  - Submit buttons are disabled while a request is in flight.
+- **Server is the source of truth.** After every mutation (profile, order, refund) the UI renders the server's response or refetches.
