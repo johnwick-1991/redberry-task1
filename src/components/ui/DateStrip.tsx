@@ -7,12 +7,15 @@ export function DateStrip({
   onChange,
   className,
   compact = false,
+  available,
 }: {
   value: string;
   onChange: (date: string) => void;
   className?: string;
   /** Narrow containers (the filter sidebar): wrap onto two rows. */
   compact?: boolean;
+  /** Dates that have sessions. When given, the other days are shown but disabled. */
+  available?: string[];
 }) {
   const days = nextSevenDays();
   const today = todayISO();
@@ -22,18 +25,23 @@ export function DateStrip({
       {days.map((iso, i) => {
         const d = parseISODate(iso);
         const selected = iso === value;
+        const disabled = !selected && available !== undefined && !available.includes(iso);
         return (
           <button
             key={iso}
             type="button"
             role="radio"
             aria-checked={selected}
+            disabled={disabled}
+            title={disabled ? 'No sessions on this day' : undefined}
             onClick={() => onChange(iso)}
             className={clsx(
-              'flex cursor-pointer flex-col items-center rounded-lg border px-1 py-2 transition-colors',
+              'flex flex-col items-center rounded-lg border px-1 py-2 transition-colors',
               selected
-                ? 'border-accent bg-accent text-white shadow-lg shadow-accent/25'
-                : 'border-line bg-surface-2 text-ink hover:border-ink/30',
+                ? 'cursor-pointer border-accent bg-accent text-white shadow-lg shadow-accent/25'
+                : disabled
+                  ? 'cursor-not-allowed border-line/50 bg-surface-2/40 text-ink opacity-40'
+                  : 'cursor-pointer border-line bg-surface-2 text-ink hover:border-ink/30',
             )}
           >
             <span className={clsx('text-[11px] font-semibold uppercase', !selected && 'text-muted')}>

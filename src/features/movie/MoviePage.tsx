@@ -61,7 +61,15 @@ function NotifyButton({ movie }: { movie: MovieDetail }) {
 function SessionsSection({ movie }: { movie: MovieDetail }) {
   const [params, setParams] = useSearchParams();
   const raw = params.get('date');
-  const date = raw && isWithinNextSevenDays(raw) ? raw : todayISO();
+  const available = movie.availableDates;
+  // Default to today, or to the first day that actually has sessions if today has none.
+  const firstAvailable = available?.find(isWithinNextSevenDays);
+  const date =
+    raw && isWithinNextSevenDays(raw)
+      ? raw
+      : available && !available.includes(todayISO()) && firstAvailable
+        ? firstAvailable
+        : todayISO();
   const user = useAuthStore((s) => s.user);
   const authReady = useAuthStore((s) => s.ready);
   const startBooking = useStartBooking();
@@ -92,6 +100,7 @@ function SessionsSection({ movie }: { movie: MovieDetail }) {
         <DateStrip
           value={date}
           onChange={(d) => setParams({ date: d }, { replace: true, preventScrollReset: true })}
+          available={available}
           className="w-[640px]"
         />
       </div>
@@ -275,6 +284,18 @@ export function MoviePage() {
             )}
           </Fact>
         </dl>
+        {movie.ageRating.minAge >= 16 && (
+          <div className="mt-4 flex items-start gap-3 rounded-2xl border border-warn/30 bg-warn/10 px-5 py-4 text-sm">
+            <AlertIcon className="mt-0.5 size-4 shrink-0 text-warn" />
+            <div>
+              <p className="text-xs font-bold uppercase tracking-wider text-warn">Rating note</p>
+              <p className="mt-1 text-ink/85">
+                <span className="font-bold text-warn">{movie.ageRating.code}</span> {movie.ageRating.description}{' '}
+                Tickets require an account aged {movie.ageRating.minAge} or over.
+              </p>
+            </div>
+          </div>
+        )}
       </section>
 
       {movie.isComingSoon ? (
