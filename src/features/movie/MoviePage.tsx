@@ -12,7 +12,6 @@ import {
   formatDayMonth,
   formatLongDate,
   formatLongDay,
-  formatPrice,
   formatRuntime,
   isWithinNextSevenDays,
   todayISO,
@@ -26,6 +25,7 @@ import { DateStrip } from '@/components/ui/DateStrip';
 import { AgeBadge, Chip, EmptyState, ErrorState } from '@/components/ui/States';
 import { Skeleton } from '@/components/ui/Spinner';
 import { AlertIcon, BellIcon, CheckIcon, ClockIcon, FigmaIcon } from '@/components/ui/icons';
+import { Price } from '@/components/ui/Price';
 
 function Fact({ label, children }: { label: string; children: ReactNode }) {
   return (
@@ -185,7 +185,7 @@ function Details({ movie }: { movie: MovieDetail }) {
       <Fact label="Duration">{movie.runtimeMinutes} minutes</Fact>
       <Fact label="Release date">{formatLongDay(movie.releaseDate)}</Fact>
       <Fact label="Formats">{movie.formats.map((f) => f.name).join(', ') || '—'}</Fact>
-      {movie.fromPrice !== null && <Fact label="From">{formatPrice(movie.fromPrice)}</Fact>}
+      {movie.fromPrice !== null && <Fact label="From"><Price value={movie.fromPrice} /></Fact>}
       <div className="flex flex-col gap-[7px] rounded-xl bg-tint-warn px-[13px] py-[9px] text-xs text-warn">
         <p className="font-semibold">RATING NOTE</p>
         <p className="flex gap-[7px]">

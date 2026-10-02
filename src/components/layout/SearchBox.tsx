@@ -2,10 +2,11 @@ import clsx from 'clsx';
 import { useEffect, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useSearch } from '@/api/queries';
-import { formatPrice, formatRuntime } from '@/lib/format';
+import { formatRuntime } from '@/lib/format';
 import { AgeBadge } from '@/components/ui/States';
 import { FigmaIcon, FilmIcon } from '@/components/ui/icons';
 import { Spinner } from '@/components/ui/Spinner';
+import { Price } from '@/components/ui/Price';
 
 function useDebounced<T>(value: T, delay: number): T {
   const [debounced, setDebounced] = useState(value);
@@ -142,7 +143,7 @@ export function SearchBox() {
                         <span className="shrink-0 text-xs font-semibold text-warn">Coming soon</span>
                       ) : (
                         m.fromPrice !== null && (
-                          <span className="shrink-0 text-xs font-semibold">from {formatPrice(m.fromPrice)}</span>
+                          <span className="shrink-0 text-xs font-semibold">from <Price value={m.fromPrice} /></span>
                         )
                       )}
                     </Link>

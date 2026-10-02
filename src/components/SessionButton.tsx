@@ -2,6 +2,7 @@ import clsx from 'clsx';
 import type { Session } from '@/api/types';
 import { formatPrice } from '@/lib/format';
 import { FigmaIcon } from '@/components/ui/icons';
+import { Price } from '@/components/ui/Price';
 
 interface SessionButtonProps {
   session: Session;
@@ -70,7 +71,7 @@ export function SessionButton({ session, onSelect, blocked = false }: SessionBut
         </div>
         <div className="flex flex-col items-end gap-2.5">
           <SeatsLeft session={session} tone="status" />
-          <span className="text-sm font-extrabold">{formatPrice(session.price)}</span>
+          <span className="text-sm font-extrabold"><Price value={session.price} /></span>
         </div>
       </div>
     </button>
@@ -106,7 +107,7 @@ export function SessionTicket({ session, onSelect, blocked = false }: SessionBut
       <span className="absolute left-[124px] top-[11px] h-[59px] border-l-[1.5px] border-dashed border-ink" />
       <span className="relative flex w-[83px] flex-col items-center gap-2 py-2.5">
         <span className="text-lg font-extrabold text-accent group-disabled:text-muted">
-          {formatPrice(session.price)}
+          <Price value={session.price} spaced />
         </span>
         <SeatsLeft session={session} tone="muted" />
       </span>

@@ -1,6 +1,11 @@
-/** ₾24 / ₾14.50 */
+/** 24 / 14.50 */
+export function formatAmount(value: number): string {
+  return Number.isInteger(value) ? String(value) : value.toFixed(2);
+}
+
+/** ₾24 / ₾14.50 (plain text: labels, toasts) */
 export function formatPrice(value: number): string {
-  return `₾${Number.isInteger(value) ? value : value.toFixed(2)}`;
+  return `₾${formatAmount(value)}`;
 }
 
 /** 134 -> "134 min", as the design writes runtimes. */

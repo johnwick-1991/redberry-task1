@@ -1,8 +1,9 @@
 import type { Order, Session } from '@/api/types';
-import { formatPrice, formatShortDate } from '@/lib/format';
+import { formatShortDate } from '@/lib/format';
 import { Poster } from '@/components/MovieCards';
 import { Button } from '@/components/ui/Button';
 import { FigmaIcon } from '@/components/ui/icons';
+import { Price } from '@/components/ui/Price';
 
 /** Rendered from the server's order response, not local state. */
 export function Confirmation({
@@ -60,7 +61,7 @@ export function Confirmation({
           <div className="h-px bg-surface-3" />
           <div className="flex items-center justify-between">
             <span className="text-xs text-muted">TOTAL PAID</span>
-            <span className="text-lg font-extrabold">{formatPrice(order.totalPrice)}</span>
+            <span className="text-lg font-extrabold"><Price value={order.totalPrice} spaced /></span>
           </div>
         </div>
       </div>

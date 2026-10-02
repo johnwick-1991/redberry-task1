@@ -9,7 +9,7 @@ import { qk, useFilterOptions, useSeatMap, useSession } from '@/api/queries';
 import { useAuthStore } from '@/store/auth';
 import { useAuthModal } from '@/store/authModal';
 import { useBookingStore } from '@/store/booking';
-import { formatPrice, formatWeekdayDate, roundMoney } from '@/lib/format';
+import { formatWeekdayDate, roundMoney } from '@/lib/format';
 import { ageRestrictionMessage, isAgeRestricted, PROFILE_INCOMPLETE_MESSAGE } from '@/lib/guards';
 import { Modal } from '@/components/ui/Modal';
 import { Button } from '@/components/ui/Button';
@@ -22,6 +22,7 @@ import { HoldTimer, useCountdown } from './HoldTimer';
 import { CheckoutStep } from './CheckoutStep';
 import { StepTabs, type BookingStep } from './StepTabs';
 import { Confirmation } from './Confirmation';
+import { Price } from '@/components/ui/Price';
 
 type Step = BookingStep;
 
@@ -400,7 +401,7 @@ function BookingFlow({ sessionId }: { sessionId: number }) {
                         <span className="font-semibold">{s.code}</span>
                       </span>
                       <span className="flex items-center gap-3">
-                        <span className="font-semibold">{formatPrice(priceFor(s.ticketType))}</span>
+                        <span className="font-semibold"><Price value={priceFor(s.ticketType)} /></span>
                         <button
                           type="button"
                           onClick={() => setSelection((prev) => prev.filter((x) => x.seatId !== s.seatId))}
@@ -456,7 +457,7 @@ function BookingFlow({ sessionId }: { sessionId: number }) {
           <div className="mt-auto flex flex-col gap-3 pt-2.5">
             <div className="flex items-center justify-between px-[5px]">
               <span className="text-xs font-semibold">SUBTOTAL</span>
-              <span className="text-2xl font-extrabold">{formatPrice(subtotal)}</span>
+              <span className="text-2xl font-extrabold"><Price value={subtotal} spaced /></span>
             </div>
             {blockers.length > 0 && selection.length > 0 && (
               <p className="px-[5px] text-xs text-warn">{blockers[0]}</p>

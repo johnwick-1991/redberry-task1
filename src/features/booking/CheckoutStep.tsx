@@ -6,11 +6,12 @@ import type { Order, SeatHold, Session, User } from '@/api/types';
 import { createOrder } from '@/api/endpoints';
 import { parseApiError } from '@/api/errors';
 import { applyServerErrors } from '@/lib/form';
-import { formatPrice, formatShortDate } from '@/lib/format';
+import { formatShortDate } from '@/lib/format';
 import { checkoutSchema, type CheckoutValues } from '@/lib/validation';
 import { Button } from '@/components/ui/Button';
 import { FormAlert, TextField } from '@/components/ui/Field';
 import { StepTabs } from './StepTabs';
+import { Price } from '@/components/ui/Price';
 
 const FIELDS = ['fullName', 'email', 'mobileNumber', 'cardNumber', 'expiry', 'cvv'] as const;
 
@@ -215,7 +216,7 @@ export function CheckoutStep({
         <div className="mt-auto flex flex-col gap-3 pt-2.5">
           <div className="flex items-center justify-between px-[5px]">
             <span className="text-xs font-semibold">SUBTOTAL</span>
-            <span className="text-2xl font-extrabold">{formatPrice(hold.subtotal)}</span>
+            <span className="text-2xl font-extrabold"><Price value={hold.subtotal} spaced /></span>
           </div>
           <Button type="submit" loading={mutation.isPending} className="w-full">
             {mutation.isPending ? 'Processing payment…' : 'Pay: Complete order'}

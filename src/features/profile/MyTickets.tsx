@@ -15,6 +15,7 @@ import { Modal } from '@/components/ui/Modal';
 import { AgeBadge, EmptyState, ErrorState } from '@/components/ui/States';
 import { Skeleton } from '@/components/ui/Spinner';
 import { FigmaIcon } from '@/components/ui/icons';
+import { Price } from '@/components/ui/Price';
 
 function RefundDialog({ order, onClose }: { order: Order; onClose: () => void }) {
   const queryClient = useQueryClient();
@@ -60,7 +61,7 @@ function RefundDialog({ order, onClose }: { order: Order; onClose: () => void })
         {error && <FormAlert>{error}</FormAlert>}
         <p className="text-muted">
           Your seats ({order.tickets.map((t) => t.seatCode).join(', ')}) will be released and{' '}
-          <span className="font-semibold text-ink">{formatPrice(order.totalPrice)}</span> refunded to the card ending in{' '}
+          <span className="font-semibold text-ink"><Price value={order.totalPrice} /></span> refunded to the card ending in{' '}
           {order.cardLastFour}. This can&apos;t be undone.
         </p>
       </div>
@@ -141,7 +142,7 @@ function TicketCard({ order, onRefund }: { order: Order; onRefund?: () => void }
           <div className="flex items-baseline justify-between">
             <span className="text-sm font-semibold text-muted">{refunded ? 'Refunded' : 'Total paid'}</span>
             <span className={clsx('text-2xl font-extrabold', refunded && 'text-muted line-through')}>
-              {formatPrice(order.totalPrice)}
+              <Price value={order.totalPrice} />
             </span>
           </div>
           {!refunded && (

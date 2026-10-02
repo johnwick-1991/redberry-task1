@@ -4,12 +4,13 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import type { Movie } from '@/api/types';
 import { notifyMe } from '@/api/endpoints';
 import { errorMessage } from '@/api/errors';
-import { formatDayMonth, formatPrice, formatRuntime } from '@/lib/format';
+import { formatDayMonth, formatRuntime } from '@/lib/format';
 import { useRequireAuth } from '@/lib/guards';
 import { toast } from '@/store/toast';
 import { buttonClasses } from '@/components/ui/Button';
 import { AgeBadge } from '@/components/ui/States';
 import { FigmaIcon, FilmIcon } from '@/components/ui/icons';
+import { Price } from '@/components/ui/Price';
 
 export function Poster({ src, title, className }: { src: string | null; title: string; className?: string }) {
   return (
@@ -50,7 +51,11 @@ export function NowPlayingCard({ movie }: { movie: Movie }) {
         <AgeBadge rating={movie.ageRating} className="self-start px-[7px]" />
       </div>
       <div className="flex items-center justify-between">
-        <span className="text-xs font-semibold">{movie.fromPrice !== null && `From ${formatPrice(movie.fromPrice)}`}</span>
+        <span className="text-xs font-semibold">{movie.fromPrice !== null && (
+            <>
+              From <Price value={movie.fromPrice} spaced />
+            </>
+          )}</span>
         <Link to={`/movies/${movie.slug}`} className={buttonClasses('primary', 'sm')}>
           Buy Ticket
         </Link>
