@@ -13,7 +13,7 @@ import { PROFILE_INCOMPLETE_MESSAGE } from '@/lib/guards';
 import { profileSchema, type ProfileValues } from '@/lib/validation';
 import { Button } from '@/components/ui/Button';
 import { FormAlert, SelectField, TextField } from '@/components/ui/Field';
-import { AlertIcon, CheckIcon } from '@/components/ui/icons';
+import { FigmaIcon } from '@/components/ui/icons';
 
 const FIELDS = ['fullName', 'mobileNumber', 'dateOfBirth', 'preferredVenueId'] as const;
 
@@ -79,25 +79,13 @@ export function ProfileForm({ user }: { user: User }) {
   const notice = eligibility(user.age);
 
   return (
-    <section className="rounded-2xl border border-line bg-surface p-6">
-      <div className="mb-6 flex items-center justify-between">
-        <h2 className="text-xl font-bold">Personal Information</h2>
-        {user.profileComplete ? (
-          <span className="flex items-center gap-1.5 rounded-full border border-ok/40 bg-ok/10 px-3 py-1 text-sm font-semibold text-ok">
-            Profile Complete <CheckIcon className="size-4" strokeWidth={3} />
-          </span>
-        ) : (
-          <span className="flex items-center gap-1.5 rounded-full border border-warn/40 bg-warn/10 px-3 py-1 text-sm font-semibold text-warn">
-            <span className="size-2 rounded-full bg-warn" /> Incomplete
-          </span>
-        )}
-      </div>
-
-      {!user.profileComplete && (
-        <div className="mb-6 flex items-center gap-3 rounded-xl border border-warn/40 bg-warn/10 px-4 py-3 text-sm text-warn">
-          <AlertIcon className="size-5 shrink-0" />
-          {PROFILE_INCOMPLETE_MESSAGE}
-        </div>
+    <section className="flex w-[880px] flex-col gap-6">
+      {user.profileComplete ? (
+        <span className="flex items-center gap-1.5 self-start rounded-lg bg-ok/10 px-3 py-2.5 text-xs font-semibold text-ok">
+          Profile Complete <FigmaIcon name="confirm" className="size-3" />
+        </span>
+      ) : (
+        <FormAlert tone="warning">{PROFILE_INCOMPLETE_MESSAGE}</FormAlert>
       )}
 
       <form
@@ -107,14 +95,14 @@ export function ProfileForm({ user }: { user: User }) {
           setFormError(null);
           mutation.mutate(values);
         })}
-        className="flex flex-col gap-5"
+        className="flex flex-col gap-9"
       >
         {formError && <FormAlert>{formError}</FormAlert>}
 
-        <div className="grid grid-cols-2 gap-5">
+        <div className="flex flex-col gap-[18px]">
           <TextField
             id="pf-name"
-            label="Full Name"
+            label="Full name"
             required
             autoComplete="name"
             error={errors.fullName?.message}
@@ -129,14 +117,14 @@ export function ProfileForm({ user }: { user: User }) {
             value={user.email}
             readOnly
             disabled
-            hint="Set at registration and can't be changed."
+            hint="Set at registration and cannot be changed"
           />
           <TextField
             id="pf-mobile"
-            label="Mobile Number"
+            label="Mobile number"
             required
             type="tel"
-            placeholder="5XX XXX XXX"
+            placeholder="e.g. 555 123 456"
             autoComplete="tel-national"
             error={errors.mobileNumber?.message}
             valid={!!fieldValid('mobileNumber')}
@@ -144,18 +132,18 @@ export function ProfileForm({ user }: { user: User }) {
           />
           <TextField
             id="pf-dob"
-            label="Date of Birth"
+            label="Date of birth"
             required
             type="date"
             max={todayISO()}
             error={errors.dateOfBirth?.message}
             valid={!!fieldValid('dateOfBirth')}
-            hint="Used to check age-restricted titles."
+            hint={notice ?? undefined}
             {...register('dateOfBirth')}
           />
           <SelectField
             id="pf-venue"
-            label="Preferred Venue"
+            label="Preferred Venue (Optional)"
             error={errors.preferredVenueId?.message}
             {...register('preferredVenueId')}
           >
@@ -168,19 +156,15 @@ export function ProfileForm({ user }: { user: User }) {
           </SelectField>
         </div>
 
-        {notice && (
-          <p className="rounded-lg border border-line bg-surface-2 px-4 py-3 text-sm text-muted">{notice}</p>
-        )}
-
-        <div className="flex items-center justify-end gap-3">
+        <div className="flex items-center gap-3">
+          <Button type="submit" loading={mutation.isPending} disabled={!isDirty || !isValid}>
+            Save changes
+          </Button>
           {isDirty && (
             <Button variant="ghost" onClick={() => reset(toValues(user))} disabled={mutation.isPending}>
               Discard
             </Button>
           )}
-          <Button type="submit" loading={mutation.isPending} disabled={!isDirty || !isValid}>
-            Save Changes
-          </Button>
         </div>
       </form>
     </section>

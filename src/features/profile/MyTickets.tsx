@@ -1,5 +1,5 @@
 import clsx from 'clsx';
-import { useState } from 'react';
+import { useState, type ReactNode } from 'react';
 import { Link } from 'react-router-dom';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import type { Order, TicketsFilter } from '@/api/types';
@@ -7,14 +7,14 @@ import { refundOrder } from '@/api/endpoints';
 import { errorMessage } from '@/api/errors';
 import { useTickets } from '@/api/queries';
 import { toast } from '@/store/toast';
-import { formatLongDate, formatPrice } from '@/lib/format';
+import { formatPrice, formatRuntime, formatShortDate } from '@/lib/format';
 import { Poster } from '@/components/MovieCards';
 import { Button, buttonClasses } from '@/components/ui/Button';
 import { FormAlert } from '@/components/ui/Field';
 import { Modal } from '@/components/ui/Modal';
-import { AgeBadge, Chip, EmptyState, ErrorState } from '@/components/ui/States';
+import { AgeBadge, EmptyState, ErrorState } from '@/components/ui/States';
 import { Skeleton } from '@/components/ui/Spinner';
-import { TicketIcon } from '@/components/ui/icons';
+import { FigmaIcon } from '@/components/ui/icons';
 
 function RefundDialog({ order, onClose }: { order: Order; onClose: () => void }) {
   const queryClient = useQueryClient();
@@ -68,70 +68,95 @@ function RefundDialog({ order, onClose }: { order: Order; onClose: () => void })
   );
 }
 
+function Meta({ label, children }: { label: string; children: ReactNode }) {
+  return (
+    <div className="flex flex-col gap-1 font-semibold leading-none">
+      <span className="text-xs uppercase tracking-[0.72px] text-muted">{label}</span>
+      <span className="text-sm">{children}</span>
+    </div>
+  );
+}
+
+/** "Refundable until 14:30, Tue 15 Sep": the API closes refunds 2 hours before the start. */
+function refundDeadline(startsAt: string) {
+  const d = new Date(new Date(startsAt).getTime() - 2 * 60 * 60 * 1000);
+  const time = d.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+  const day = d.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' });
+  return `${time}, ${day}`;
+}
+
 function TicketCard({ order, onRefund }: { order: Order; onRefund?: () => void }) {
   const { session } = order;
   const movie = session.movie;
   const refunded = order.status === 'refunded' || order.refundedAt !== null;
 
   return (
-    <article className={clsx('flex overflow-hidden rounded-2xl border border-line bg-surface', refunded && 'opacity-75')}>
-      {movie && <Poster src={movie.posterUrl} title={movie.title} className="w-36 shrink-0" />}
-      <div className="flex flex-1 flex-col gap-3 p-5">
-        <div className="flex items-start justify-between gap-4">
-          <div>
-            <div className="flex items-center gap-2">
-              {movie ? (
-                <Link to={`/movies/${movie.slug}`} className="text-lg font-bold hover:text-accent">
-                  {movie.title}
-                </Link>
-              ) : (
-                <span className="text-lg font-bold">Order {order.reference}</span>
-              )}
-              {movie && <AgeBadge rating={movie.ageRating} />}
-            </div>
-            <p className="mt-1 text-sm text-muted">
-              {session.venue?.name ?? session.hall.venue?.name} · Hall {session.hall.name}
-            </p>
+    <article className="flex items-stretch gap-[18px] overflow-hidden rounded-[26px] bg-surface">
+      <div className="flex min-w-0 flex-1 items-center gap-[18px] px-[30px] py-[25px]">
+        {movie && <Poster src={movie.posterUrl} title={movie.title} className="h-[133px] w-[100px] shrink-0 rounded-[10px]" />}
+        <div className="flex min-w-0 flex-1 flex-col gap-3">
+          <div className="flex items-center gap-2.5">
+            {movie ? (
+              <Link to={`/movies/${movie.slug}`} className="truncate text-xl font-extrabold uppercase leading-none hover:text-accent">
+                {movie.title}
+              </Link>
+            ) : (
+              <span className="text-xl font-extrabold leading-none">Order {order.reference}</span>
+            )}
+            {movie && <AgeBadge rating={movie.ageRating} className="py-[3px]" />}
+            {movie && <span className="text-sm text-muted">{formatRuntime(movie.runtimeMinutes)}</span>}
           </div>
-          <span className="font-mono text-xs font-semibold tracking-wider text-muted">{order.reference}</span>
+          <div className="flex flex-wrap gap-10">
+            <Meta label="Date">
+              {formatShortDate(session.date)} · {session.time}
+            </Meta>
+            <Meta label="Venue">
+              {session.venue?.name ?? session.hall.venue?.name} · Hall {session.hall.name}
+            </Meta>
+            {session.format && (
+              <Meta label="Format">
+                {session.format.name}
+                {session.language && ` · ${session.language.name}`}
+              </Meta>
+            )}
+          </div>
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="text-xs font-semibold uppercase tracking-[0.72px] text-muted">Seats</span>
+            {order.tickets.map((t) => (
+              <span key={t.id} className="rounded-md bg-tint-white px-2.5 py-1 text-xs font-semibold">
+                {t.seatCode} · {t.ticketType.name}
+              </span>
+            ))}
+          </div>
         </div>
-
-        <div className="flex flex-wrap items-center gap-2 text-sm">
-          <span className="font-semibold">{formatLongDate(session.date)}</span>
-          <span className="text-muted">at</span>
-          <span className="font-semibold">{session.time}</span>
-          {session.format && <Chip>{session.format.name}</Chip>}
-          {session.language && <span className="text-muted">{session.language.name}</span>}
-        </div>
-
-        <ul className="flex flex-wrap gap-2">
-          {order.tickets.map((t) => (
-            <li key={t.id} className="rounded-lg border border-line bg-surface-2 px-2.5 py-1 text-xs">
-              <span className="font-bold">{t.seatCode}</span>
-              <span className="text-muted"> · {t.ticketType.name}</span>
-            </li>
-          ))}
-        </ul>
       </div>
 
       {/* Ticket stub */}
-      <div className="flex w-56 shrink-0 flex-col justify-between border-l border-dashed border-line bg-surface-2/60 p-5">
-        <div>
-          <p className="text-xs uppercase tracking-wider text-muted">{refunded ? 'Refunded' : 'Total paid'}</p>
-          <p className={clsx('text-2xl font-extrabold', refunded && 'text-muted line-through')}>
-            {formatPrice(order.totalPrice)}
-          </p>
+      <div className="flex w-[300px] shrink-0 flex-col justify-center gap-4 border-l border-dashed border-surface-3 px-6 py-5">
+        <div className="flex flex-col gap-0.5 font-semibold">
+          <span className="text-xs uppercase tracking-[0.72px] text-muted">Order</span>
+          <span className="text-sm">#{order.reference}</span>
         </div>
-        {onRefund && (
-          <div className="flex flex-col gap-1.5">
-            <Button variant="danger" size="sm" disabled={!order.isRefundable} onClick={onRefund}>
-              Refund
-            </Button>
-            {!order.isRefundable && (
-              <p className="text-xs text-muted">Refunds close 2 hours before the session starts.</p>
-            )}
+        <div className="flex flex-col gap-2.5">
+          <div className="flex items-baseline justify-between">
+            <span className="text-sm font-semibold text-muted">{refunded ? 'Refunded' : 'Total paid'}</span>
+            <span className={clsx('text-2xl font-extrabold leading-none', refunded && 'text-muted line-through')}>
+              {formatPrice(order.totalPrice)}
+            </span>
           </div>
-        )}
+          {!refunded && (
+            <>
+              <Button variant="secondary" size="sm" className="w-full" disabled={!onRefund || !order.isRefundable} onClick={onRefund}>
+                Refund
+              </Button>
+              <p className="text-center text-xs text-muted">
+                {order.isRefundable
+                  ? `Refundable until ${refundDeadline(session.startsAt)}`
+                  : 'Refunds close 2 hours before the session starts.'}
+              </p>
+            </>
+          )}
+        </div>
       </div>
     </article>
   );
@@ -143,9 +168,9 @@ function TicketList({ filter }: { filter: TicketsFilter }) {
 
   if (isPending) {
     return (
-      <div className="flex flex-col gap-4">
+      <div className="flex flex-col gap-5">
         {Array.from({ length: 2 }, (_, i) => (
-          <Skeleton key={i} className="h-44 rounded-2xl" />
+          <Skeleton key={i} className="h-[183px] rounded-[26px]" />
         ))}
       </div>
     );
@@ -154,7 +179,7 @@ function TicketList({ filter }: { filter: TicketsFilter }) {
   if (data.length === 0) {
     return filter === 'upcoming' ? (
       <EmptyState
-        icon={<TicketIcon className="size-10" />}
+        icon={<FigmaIcon name="ticket" className="size-10" />}
         title="No upcoming tickets"
         description="When you book a session, your tickets will show up here."
         action={
@@ -165,7 +190,7 @@ function TicketList({ filter }: { filter: TicketsFilter }) {
       />
     ) : (
       <EmptyState
-        icon={<TicketIcon className="size-10" />}
+        icon={<FigmaIcon name="ticket" className="size-10" />}
         title="No past tickets"
         description="Sessions you've attended and refunded orders will appear here."
       />
@@ -174,7 +199,7 @@ function TicketList({ filter }: { filter: TicketsFilter }) {
 
   return (
     <>
-      <div className="flex flex-col gap-4">
+      <div className="flex flex-col gap-5">
         {data.map((order) => (
           <TicketCard
             key={order.id}
@@ -190,32 +215,34 @@ function TicketList({ filter }: { filter: TicketsFilter }) {
 
 export function MyTickets() {
   const [tab, setTab] = useState<TicketsFilter>('upcoming');
-  const tabs: { id: TicketsFilter; label: string }[] = [
-    { id: 'upcoming', label: 'Upcoming' },
-    { id: 'past', label: 'Past' },
+  const upcoming = useTickets('upcoming');
+  const past = useTickets('past');
+  const tabs: { id: TicketsFilter; label: string; count?: number }[] = [
+    { id: 'upcoming', label: 'Upcoming', count: upcoming.data?.length },
+    { id: 'past', label: 'Past', count: past.data?.length },
   ];
 
   return (
-    <section id="tickets" className="scroll-mt-24">
-      <div className="mb-5 flex items-center justify-between">
-        <h2 className="text-xl font-bold">My Tickets</h2>
-        <div role="tablist" className="flex rounded-xl border border-line bg-surface p-1">
-          {tabs.map((t) => (
-            <button
-              key={t.id}
-              type="button"
-              role="tab"
-              aria-selected={tab === t.id}
-              onClick={() => setTab(t.id)}
-              className={clsx(
-                'cursor-pointer rounded-lg px-5 py-2 text-sm font-semibold transition-colors',
-                tab === t.id ? 'bg-accent text-white' : 'text-muted hover:text-ink',
-              )}
-            >
-              {t.label}
-            </button>
-          ))}
-        </div>
+    <section id="tickets" className="flex flex-col gap-5">
+      <div role="tablist" className="flex self-start rounded-xl bg-surface p-[5px]">
+        {tabs.map((t) => (
+          <button
+            key={t.id}
+            type="button"
+            role="tab"
+            aria-selected={tab === t.id}
+            onClick={() => setTab(t.id)}
+            className={clsx(
+              'flex cursor-pointer items-center gap-2 rounded-[10px] px-3.5 py-[7px] font-semibold transition-colors',
+              tab === t.id ? 'bg-surface-3 text-ink' : 'text-muted hover:text-ink',
+            )}
+          >
+            <span className="text-sm">{t.label}</span>
+            {t.count !== undefined && (
+              <span className={clsx('text-xs', tab !== t.id && 'text-disabled')}>{t.count}</span>
+            )}
+          </button>
+        ))}
       </div>
       <div role="tabpanel">
         <TicketList key={tab} filter={tab} />
