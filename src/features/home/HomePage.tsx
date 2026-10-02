@@ -227,7 +227,7 @@ function NowPlaying() {
 function ComingSoon() {
   const { data, isPending, isError, error, refetch } = useComingSoon();
   return (
-    <Rail title="Coming soon..." action={<SeeAll />}>
+    <Rail title="Coming soon...">
       {isPending ? (
         <RailSkeleton big={false} />
       ) : isError ? (

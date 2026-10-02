@@ -12,9 +12,16 @@ interface SessionButtonProps {
 
 const FEW_SEATS = 5;
 
-/** "Georgian Dub" -> "GEO", the short form the ticket stub has room for. */
-function languageCode(name: string) {
-  return name.slice(0, 3).toUpperCase();
+/** Short forms the ticket stub has room for; dub and subtitles stay distinct. */
+const LANGUAGE_CODES: Record<string, string> = {
+  'georgian-dub': 'GEO DUB',
+  'georgian-subtitles': 'GEO SUB',
+  'original-subtitles': 'ORIG SUB',
+  'russian-dub': 'RUS DUB',
+};
+
+function languageCode(language: Session['language']) {
+  return LANGUAGE_CODES[language.slug] ?? language.name.slice(0, 3).toUpperCase();
 }
 
 function label(session: Session) {
@@ -85,13 +92,13 @@ export function SessionTicket({ session, onSelect, blocked = false }: SessionBut
       )}
     >
       <img src="/figma/ticket-body.svg" alt="" className="absolute inset-0 size-full" />
-      <span className="relative flex w-[124px] flex-col items-center gap-2 py-[15px]">
+      <span className="relative flex w-[124px] flex-col items-center gap-1.5 py-2">
         <span className="text-xl font-extrabold leading-none">{session.time}</span>
-        <span className="flex items-center gap-1.5">
-          <span className="text-xs text-muted" title={session.language.name}>
-            {languageCode(session.language.name)}
+        <span className="flex flex-col items-center gap-1">
+          <span className="text-[11px] leading-none text-muted" title={session.language.name}>
+            {languageCode(session.language)}
           </span>
-          <span className="rounded-full bg-surface px-3 py-1 text-xs font-semibold leading-none text-[#e3e3e3]/70">
+          <span className="rounded-full bg-surface px-2.5 py-1 text-[11px] font-semibold leading-none text-[#e3e3e3]/70">
             {session.format.name}
           </span>
         </span>

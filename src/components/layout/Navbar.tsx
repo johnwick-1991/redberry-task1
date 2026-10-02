@@ -100,7 +100,7 @@ function UserMenu() {
           />
         </span>
         <span className="max-w-40 truncate text-xs font-semibold">{firstName}</span>
-        <ChevronDown className={clsx('size-4 text-ink transition-transform', open ? '' : 'rotate-180')} />
+        <ChevronDown className={clsx('size-4 text-ink transition-transform', open && 'rotate-180')} />
       </button>
 
       {open && (

@@ -55,12 +55,14 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
-/* Hide the native scrollbar on horizontal card rails but keep them scrollable. */
+/* Horizontal card rails: a thin scrollbar that only shows on hover, so mouse users can still reach every card. */
 .rail {
-  scrollbar-width: none;
+  scrollbar-width: thin;
+  scrollbar-color: transparent transparent;
+  padding-bottom: 6px;
 }
-.rail::-webkit-scrollbar {
-  display: none;
+.rail:hover {
+  scrollbar-color: var(--color-disabled) transparent;
 }
 
 /* Icons exported from Figma, tinted with currentColor through a mask. */

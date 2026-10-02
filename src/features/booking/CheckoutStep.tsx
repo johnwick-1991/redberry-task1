@@ -220,6 +220,9 @@ export function CheckoutStep({
           <Button type="submit" loading={mutation.isPending} className="w-full">
             {mutation.isPending ? 'Processing payment…' : 'Pay: Complete order'}
           </Button>
+          <Button variant="ghost" size="sm" onClick={onBack} disabled={mutation.isPending} className="w-full">
+            Back
+          </Button>
         </div>
       </aside>
     </form>
