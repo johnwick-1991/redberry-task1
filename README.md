@@ -35,6 +35,7 @@ src/
 
 - **Protected actions continue after login.** Guarded actions (Select Seats, Notify Me, My Tickets, Profile) are queued as pending and run automatically after login or sign-up. A 401 from any request parks that request, opens the login modal, and replays it with the new token, so the user never clicks twice.
 - **The sessions page lives in the URL** (`?venue=galleria,batumi&date=…&format=max&sort=price_asc&page=2`). Refresh, copy-paste and Back/Forward all restore the view. Any filter or sort change resets to page 1. Choosing venues narrows the formats and drops formats those venues don't offer.
+- **Session cards lead to the film.** Clicking a showtime on the sessions page opens the film's page and starts seat selection for that session right away (login, profile and age checks included).
 - **Nothing is hardcoded.** Venues, formats, languages, time bands, sorts, ticket types and their price ratios, the seat cap and the hold length all come from `GET /filter-options`.
 - **The hall map is drawn from the API.** It follows sections → rows → seats, takes row labels from the data, keeps gaps for `unavailable` spots, and uses `aisleAfter` for gangways.
 - **Booking flow:**
