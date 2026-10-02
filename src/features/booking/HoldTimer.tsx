@@ -1,7 +1,6 @@
 import clsx from 'clsx';
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { formatCountdown } from '@/lib/format';
-import { ClockIcon } from '@/components/ui/icons';
 
 /**
  * Seconds left until `expiresAt`. Computed from the server's timestamp on
@@ -36,6 +35,7 @@ export function useCountdown(expiresAt: string | null, onExpire: () => void): nu
   return seconds;
 }
 
+/** "SEATS HELD 7:48" box in the modal header; turns red in the last minute. */
 export function HoldTimer({ seconds }: { seconds: number }) {
   const urgent = seconds <= 60;
   return (
@@ -44,12 +44,12 @@ export function HoldTimer({ seconds }: { seconds: number }) {
       aria-live={urgent ? 'assertive' : 'off'}
       aria-label={`Seats held for ${formatCountdown(seconds)}`}
       className={clsx(
-        'flex items-center gap-2 rounded-lg border px-3 py-1.5 text-sm font-semibold tabular-nums',
-        urgent ? 'animate-pulse border-bad/50 bg-bad/10 text-bad' : 'border-warn/40 bg-warn/10 text-warn',
+        'flex shrink-0 flex-col items-center gap-0.5 rounded-xl px-3.5 py-2 leading-none',
+        urgent ? 'animate-pulse bg-tint-red' : 'bg-surface',
       )}
     >
-      <ClockIcon className="size-4" />
-      Seats held · {formatCountdown(seconds)}
+      <span className="text-xs font-semibold text-muted">SEATS HELD</span>
+      <span className={clsx('text-sm font-extrabold tabular-nums', urgent && 'text-accent')}>{formatCountdown(seconds)}</span>
     </div>
   );
 }

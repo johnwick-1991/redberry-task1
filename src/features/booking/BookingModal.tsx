@@ -9,21 +9,21 @@ import { qk, useFilterOptions, useSeatMap, useSession } from '@/api/queries';
 import { useAuthStore } from '@/store/auth';
 import { useAuthModal } from '@/store/authModal';
 import { useBookingStore } from '@/store/booking';
-import { formatLongDate, formatPrice, roundMoney } from '@/lib/format';
+import { formatPrice, formatWeekdayDate, roundMoney } from '@/lib/format';
 import { ageRestrictionMessage, isAgeRestricted, PROFILE_INCOMPLETE_MESSAGE } from '@/lib/guards';
-import { Poster } from '@/components/MovieCards';
 import { Modal } from '@/components/ui/Modal';
 import { Button } from '@/components/ui/Button';
 import { FormAlert } from '@/components/ui/Field';
-import { AgeBadge, Chip, ErrorState } from '@/components/ui/States';
+import { AgeBadge, ErrorState } from '@/components/ui/States';
 import { Skeleton, Spinner } from '@/components/ui/Spinner';
-import { XIcon } from '@/components/ui/icons';
+import { FigmaIcon } from '@/components/ui/icons';
 import { SeatLegend, SeatMap } from './SeatMap';
 import { HoldTimer, useCountdown } from './HoldTimer';
 import { CheckoutStep } from './CheckoutStep';
+import { StepTabs, type BookingStep } from './StepTabs';
 import { Confirmation } from './Confirmation';
 
-type Step = 'seats' | 'checkout' | 'done';
+type Step = BookingStep;
 
 interface Selected {
   seatId: number;
@@ -55,66 +55,27 @@ function seatIndex(map: SeatMapData | undefined) {
   return { byId, byCode };
 }
 
-function StepIndicator({ step }: { step: Step }) {
-  const steps = [
-    { key: 'seats', label: 'Seats' },
-    { key: 'checkout', label: 'Checkout' },
-  ];
-  const currentIndex = step === 'seats' ? 0 : 1;
-  return (
-    <ol className="flex items-center gap-3 text-sm">
-      {steps.map((s, i) => (
-        <li key={s.key} className="flex items-center gap-3">
-          <span
-            className={clsx(
-              'flex items-center gap-2 font-semibold',
-              i === currentIndex ? 'text-ink' : i < currentIndex || step === 'done' ? 'text-ok' : 'text-muted',
-            )}
-            aria-current={i === currentIndex && step !== 'done' ? 'step' : undefined}
-          >
-            <span
-              className={clsx(
-                'grid size-6 place-items-center rounded-full text-xs',
-                i === currentIndex && step !== 'done'
-                  ? 'bg-accent text-white'
-                  : i < currentIndex || step === 'done'
-                    ? 'bg-ok/20 text-ok'
-                    : 'bg-surface-3',
-              )}
-            >
-              {i + 1}
-            </span>
-            {s.label}
-          </span>
-          {i === 0 && <span className="text-muted">→</span>}
-        </li>
-      ))}
-    </ol>
-  );
-}
-
-function SessionHeader({ session, step, seconds, showTimer }: { session: Session; step: Step; seconds: number; showTimer: boolean }) {
+function SessionHeader({ session, seconds, showTimer }: { session: Session; seconds: number; showTimer: boolean }) {
   const movie = session.movie;
   return (
-    <div className="flex items-center gap-5 border-b border-line px-6 pb-5 pr-16 pt-6">
-      {movie && <Poster src={movie.posterUrl} title={movie.title} className="h-24 w-16 shrink-0 rounded-lg" />}
-      <div className="min-w-0 flex-1">
+    <div className="flex items-start gap-4 pr-12">
+      <div className="flex min-w-0 flex-1 flex-col gap-2">
         <div className="flex items-center gap-3">
-          <h2 className="truncate text-2xl font-extrabold">{movie?.title ?? 'Booking'}</h2>
+          <h2 className="truncate text-xl font-extrabold uppercase leading-none">{movie?.title ?? 'Booking'}</h2>
           {movie && <AgeBadge rating={movie.ageRating} />}
         </div>
-        <p className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-muted">
-          <span className="text-ink">{session.venue.name}</span>· Hall {session.hall.name} ·{' '}
-          <span className="text-ink">{formatLongDate(session.date)}</span>·{' '}
-          <span className="font-bold text-ink">{session.time}</span>
-          <Chip>{session.format.name}</Chip>
-          <span>{session.language.name}</span>
+        <p className="text-xs text-muted">
+          {[
+            session.venue.name,
+            `Hall ${session.hall.name}`,
+            formatWeekdayDate(session.date),
+            session.time,
+            session.format.name,
+            session.language.name,
+          ].join(' · ')}
         </p>
       </div>
-      <div className="flex flex-col items-end gap-3">
-        {step !== 'done' && <StepIndicator step={step} />}
-        {showTimer && <HoldTimer seconds={seconds} />}
-      </div>
+      {showTimer && <HoldTimer seconds={seconds} />}
     </div>
   );
 }
@@ -341,8 +302,8 @@ function BookingFlow({ sessionId }: { sessionId: number }) {
   // ---------- Render ----------
   const loading = sessionQuery.isPending || options.isPending || restoring;
   const header =
-    session && !loading ? (
-      <SessionHeader session={session} step={step} seconds={seconds} showTimer={!!hold && step !== 'done'} />
+    session && !loading && step !== 'done' ? (
+      <SessionHeader session={session} seconds={seconds} showTimer={!!hold} />
     ) : null;
 
   let body: ReactNode;
@@ -360,14 +321,17 @@ function BookingFlow({ sessionId }: { sessionId: number }) {
       <Confirmation
         order={order}
         fallbackSession={session}
-        onClose={closeStore}
+        onClose={() => {
+          closeStore();
+          navigate('/');
+        }}
         onMyTickets={() => {
           closeStore();
           navigate('/profile#tickets');
         }}
       />
     );
-  } else if (step === 'checkout' && hold && user) {
+  } else if (step === 'checkout' && hold && user && session) {
     body = (
       <>
         {notice && (
@@ -378,7 +342,7 @@ function BookingFlow({ sessionId }: { sessionId: number }) {
         <CheckoutStep
           hold={hold}
           user={user}
-          sectionBySeatId={new Map(selection.map((s) => [s.seatId, s.section || byId.get(s.seatId)?.section || '']))}
+          session={session}
           onBack={() => {
             // Keep the hold: the user still wants these seats.
             setNotice(null);
@@ -392,22 +356,21 @@ function BookingFlow({ sessionId }: { sessionId: number }) {
     );
   } else {
     body = (
-      <div className="grid grid-cols-[1fr_340px] gap-8">
-        <div className="flex min-w-0 flex-col gap-6 rounded-2xl border border-line bg-surface-2/50 p-6">
+      <div className="grid grid-cols-[720px_1px_1fr] gap-5">
+        <div className="flex min-w-0 flex-col gap-8">
+          <StepTabs step="seats" />
           {mapQuery.isPending ? (
-            <div className="flex flex-col items-center gap-2 py-6">
-              {Array.from({ length: 8 }, (_, i) => (
-                <Skeleton key={i} className="h-9 w-[560px]" />
+            <div className="flex flex-col items-center gap-2.5">
+              {Array.from({ length: 6 }, (_, i) => (
+                <Skeleton key={i} className="h-[52px] w-[600px] rounded-[10px]" />
               ))}
             </div>
           ) : mapQuery.isError ? (
             <ErrorState error={mapQuery.error} onRetry={() => mapQuery.refetch()} title="Couldn't load the hall map" />
           ) : (
             <>
-              <div className="relative overflow-x-auto pb-2">
-                {mapQuery.isFetching && (
-                  <Spinner className="absolute right-0 top-0 size-4 text-muted" />
-                )}
+              <div className="relative max-h-[460px] overflow-auto">
+                {mapQuery.isFetching && <Spinner className="absolute right-0 top-10 size-4 text-muted" />}
                 <SeatMap map={mapQuery.data} selectedIds={selectedIds} lostIds={lostIds} onToggle={toggleSeat} />
               </div>
               <SeatLegend />
@@ -415,67 +378,71 @@ function BookingFlow({ sessionId }: { sessionId: number }) {
           )}
         </div>
 
-        <aside className="flex flex-col rounded-2xl border border-line bg-surface-2 p-5">
-          <div className="mb-3 flex items-baseline justify-between">
-            <h3 className="text-sm font-bold uppercase tracking-wider text-muted">Your seats</h3>
-            <span className="text-xs text-muted">
-              {selection.length}/{maxSeats}
-            </span>
-          </div>
+        <div className="bg-surface" />
 
-          {notice && (
-            <div className="mb-3">
-              <FormAlert tone={notice.tone}>{notice.text}</FormAlert>
-            </div>
-          )}
+        <aside className="flex min-w-0 flex-col gap-3">
+          <div className="flex max-h-[351px] flex-col gap-3 overflow-y-auto">
+            <h3 className="text-sm font-extrabold leading-none">Your seats · Max {maxSeats}</h3>
 
-          {selection.length === 0 ? (
-            <p className="rounded-xl border border-dashed border-line px-4 py-8 text-center text-sm text-muted">
-              Pick up to {maxSeats} seats on the map.
-            </p>
-          ) : (
-            <ul className="flex flex-col gap-3">
-              {selection.map((s) => (
-                <li key={s.seatId} className="rounded-xl border border-line bg-surface p-3">
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm">
-                      <span className="font-bold">{s.code}</span>
-                      <span className="text-muted"> · {s.section || byId.get(s.seatId)?.section}</span>
-                    </span>
-                    <div className="flex items-center gap-2">
-                      <span className="text-sm font-semibold">{formatPrice(priceFor(s.ticketType))}</span>
-                      <button
-                        type="button"
-                        onClick={() => setSelection((prev) => prev.filter((x) => x.seatId !== s.seatId))}
-                        className="cursor-pointer rounded p-0.5 text-muted hover:text-ink"
-                        aria-label={`Remove seat ${s.code}`}
-                      >
-                        <XIcon className="size-4" />
-                      </button>
+            {notice && <FormAlert tone={notice.tone}>{notice.text}</FormAlert>}
+
+            {selection.length === 0 ? (
+              <p className="text-xs leading-[1.3] text-muted">
+                Pick up to {maxSeats} seats from the map. Each seat can carry its own ticket type.
+              </p>
+            ) : (
+              <ul className="flex flex-col gap-3">
+                {selection.map((s) => (
+                  <li key={s.seatId} className="flex flex-col gap-3 rounded-2xl bg-surface p-[15px]">
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="flex items-center gap-3">
+                        <span className="text-muted">Seat</span>
+                        <span className="font-semibold">{s.code}</span>
+                      </span>
+                      <span className="flex items-center gap-3">
+                        <span className="font-semibold">{formatPrice(priceFor(s.ticketType))}</span>
+                        <button
+                          type="button"
+                          onClick={() => setSelection((prev) => prev.filter((x) => x.seatId !== s.seatId))}
+                          className="cursor-pointer text-muted hover:text-ink"
+                          aria-label={`Remove seat ${s.code}`}
+                        >
+                          <FigmaIcon name="x-small" className="size-4" />
+                        </button>
+                      </span>
                     </div>
-                  </div>
-                  <select
-                    value={s.ticketType}
-                    onChange={(e) => setTicketType(s.seatId, e.target.value)}
-                    aria-label={`Ticket type for seat ${s.code}`}
-                    className="mt-2 h-9 w-full cursor-pointer rounded-lg border border-line bg-surface-2 px-2 text-sm outline-none focus:border-ink/40"
-                  >
-                    {ticketTypes.map((t) => {
-                      const blocked = isTypeBlocked(t, minAge);
-                      return (
-                        <option key={t.slug} value={t.slug} disabled={blocked}>
-                          {t.name} · {Math.round(t.priceRatio * 100)}%{blocked ? ` (not for ${movie?.ageRating.code})` : ''}
-                        </option>
-                      );
-                    })}
-                  </select>
-                </li>
-              ))}
-            </ul>
-          )}
+                    <div className="h-px bg-surface-3" />
+                    <div className="flex gap-2" role="radiogroup" aria-label={`Ticket type for seat ${s.code}`}>
+                      {[...ticketTypes].reverse().map((t) => {
+                        const blocked = isTypeBlocked(t, minAge);
+                        const active = s.ticketType === t.slug;
+                        return (
+                          <button
+                            key={t.slug}
+                            type="button"
+                            role="radio"
+                            aria-checked={active}
+                            disabled={blocked}
+                            title={blocked ? `${t.name} tickets aren't sold for ${movie?.ageRating.code} films` : undefined}
+                            onClick={() => setTicketType(s.seatId, t.slug)}
+                            className={clsx(
+                              'flex-1 whitespace-nowrap rounded-2xl py-2 text-xs transition-colors',
+                              active ? 'bg-accent' : 'bg-surface-3',
+                              blocked ? 'cursor-not-allowed opacity-40' : 'cursor-pointer',
+                              !active && !blocked && 'hover:bg-disabled',
+                            )}
+                          >
+                            {t.name} {Math.round(t.priceRatio * 100)}%
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            )}
 
-          {violations.length > 0 && (
-            <div className="mt-3">
+            {violations.length > 0 && (
               <FormAlert>
                 <ul className="list-inside list-disc">
                   {violations.map((v) => (
@@ -483,28 +450,19 @@ function BookingFlow({ sessionId }: { sessionId: number }) {
                   ))}
                 </ul>
               </FormAlert>
-            </div>
-          )}
+            )}
+          </div>
 
-          <div className="mt-auto pt-5">
-            <div className="flex items-center justify-between border-t border-line pt-4">
-              <span className="text-sm text-muted">Subtotal</span>
-              <span className="text-2xl font-extrabold">{formatPrice(subtotal)}</span>
+          <div className="mt-auto flex flex-col gap-3 pt-2.5">
+            <div className="flex items-center justify-between px-[5px]">
+              <span className="text-xs font-semibold">SUBTOTAL</span>
+              <span className="text-2xl font-extrabold leading-none">{formatPrice(subtotal)}</span>
             </div>
             {blockers.length > 0 && selection.length > 0 && (
-              <p className="mt-3 text-sm text-warn">{blockers[0]}</p>
+              <p className="px-[5px] text-xs text-warn">{blockers[0]}</p>
             )}
-            <Button
-              size="lg"
-              className="mt-4 w-full"
-              disabled={!canContinue}
-              loading={holdMutation.isPending}
-              onClick={goToCheckout}
-            >
+            <Button className="w-full" disabled={!canContinue} loading={holdMutation.isPending} onClick={goToCheckout}>
               Next: Checkout
-            </Button>
-            <Button variant="ghost" className="mt-2 w-full" onClick={close} disabled={holdMutation.isPending}>
-              Close
             </Button>
           </div>
         </aside>
@@ -513,7 +471,7 @@ function BookingFlow({ sessionId }: { sessionId: number }) {
   }
 
   return (
-    <Modal open onClose={close} size="xl" header={header} title={header ? undefined : 'Select seats'}>
+    <Modal open onClose={close} size="xl" header={header} title={header || step === 'done' ? undefined : 'Select seats'}>
       {body}
     </Modal>
   );

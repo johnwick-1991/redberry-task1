@@ -1,7 +1,8 @@
 import type { Order, Session } from '@/api/types';
-import { formatLongDate, formatPrice } from '@/lib/format';
+import { formatPrice, formatShortDate } from '@/lib/format';
+import { Poster } from '@/components/MovieCards';
 import { Button } from '@/components/ui/Button';
-import { CheckIcon } from '@/components/ui/icons';
+import { FigmaIcon } from '@/components/ui/icons';
 
 /** Rendered from the server's order response, not local state. */
 export function Confirmation({
@@ -16,64 +17,58 @@ export function Confirmation({
   onClose: () => void;
 }) {
   const session = order.session ?? fallbackSession;
-  const movieTitle = order.session?.movie?.title ?? fallbackSession.movie?.title;
+  const movie = order.session?.movie ?? fallbackSession.movie;
+  const venue = session.venue ?? fallbackSession.venue;
+
+  const counts = new Map<string, number>();
+  order.tickets.forEach((t) => counts.set(t.ticketType.name, (counts.get(t.ticketType.name) ?? 0) + 1));
+  const ticketLine = [...counts].map(([name, n]) => `${n} x ${name}`).join(', ');
 
   return (
-    <div className="mx-auto flex max-w-xl flex-col items-center py-4 text-center">
-      <div className="grid size-16 animate-pop-in place-items-center rounded-full bg-ok/15 text-ok">
-        <CheckIcon className="size-8" strokeWidth={3} />
-      </div>
-      <h3 className="mt-5 text-2xl font-extrabold">You&apos;re all set!</h3>
-      <p className="mt-2 text-muted">Your payment was successful and your tickets are booked.</p>
-
-      <div className="mt-6 w-full rounded-2xl border border-line bg-surface-2 p-5 text-left">
-        <div className="flex items-center justify-between border-b border-line pb-4">
-          <span className="text-sm text-muted">Order reference</span>
-          <span className="font-mono text-lg font-bold tracking-wider text-accent">{order.reference}</span>
+    <div className="mx-auto flex w-full max-w-[673px] flex-col items-center gap-6 py-10">
+      <div className="flex w-full flex-col items-center gap-[18px]">
+        <div className="flex w-[365px] flex-col items-center gap-4 text-center">
+          <div className="grid size-14 animate-pop-in place-items-center rounded-[28px] bg-ok">
+            <FigmaIcon name="confirm" className="size-8 text-white" />
+          </div>
+          <div className="flex flex-col gap-2.5">
+            <h3 className="text-2xl font-extrabold leading-none">Booking confirmed!</h3>
+            <p className="text-sm leading-[1.3] text-muted">Your tickets are ready. We&apos;ve sent the confirmation to your email.</p>
+          </div>
+          <span className="rounded-full bg-surface-3 px-5 py-1.5 text-xs font-semibold">ORDER #{order.reference}</span>
         </div>
-        <dl className="grid grid-cols-2 gap-x-6 gap-y-3 py-4 text-sm">
-          {movieTitle && (
-            <div className="col-span-2">
-              <dt className="text-muted">Film</dt>
-              <dd className="font-semibold">{movieTitle}</dd>
+
+        <div className="flex w-full flex-col gap-3 rounded-xl bg-surface p-5">
+          <div className="flex gap-2.5">
+            {movie && <Poster src={movie.posterUrl} title={movie.title} className="h-16 w-12 shrink-0 rounded-lg" />}
+            <div className="flex min-w-0 flex-col gap-2">
+              <p className="text-sm font-extrabold uppercase leading-none">{movie?.title}</p>
+              <p className="text-xs text-muted">
+                {venue.name} · Hall {session.hall.name} · {formatShortDate(session.date)} · {session.time}
+              </p>
             </div>
-          )}
-          <div>
-            <dt className="text-muted">When</dt>
-            <dd className="font-semibold">
-              {formatLongDate(session.date)} · {session.time}
-            </dd>
           </div>
-          <div>
-            <dt className="text-muted">Where</dt>
-            <dd className="font-semibold">
-              {(session.venue ?? fallbackSession.venue).name} · Hall {session.hall.name}
-            </dd>
+          <div className="h-px bg-surface-3" />
+          <div className="flex items-center justify-between text-xs">
+            <span className="text-muted">Seats</span>
+            <span className="font-semibold">{order.tickets.map((t) => t.seatCode).join(', ')}</span>
           </div>
-        </dl>
-        <ul className="flex flex-col divide-y divide-line border-t border-line">
-          {order.tickets.map((t) => (
-            <li key={t.id} className="flex items-center justify-between py-2.5 text-sm">
-              <span>
-                <span className="font-bold">Seat {t.seatCode}</span>
-                <span className="text-muted"> · {t.ticketType.name}</span>
-              </span>
-              <span className="font-semibold">{formatPrice(t.price)}</span>
-            </li>
-          ))}
-        </ul>
-        <div className="flex items-center justify-between border-t border-line pt-4">
-          <span className="text-sm text-muted">Paid with card ···· {order.cardLastFour}</span>
-          <span className="text-xl font-extrabold">{formatPrice(order.totalPrice)}</span>
+          <div className="flex items-center justify-between text-xs">
+            <span className="text-muted">Tickets</span>
+            <span>{ticketLine}</span>
+          </div>
+          <div className="h-px bg-surface-3" />
+          <div className="flex items-center justify-between">
+            <span className="text-xs text-muted">TOTAL PAID</span>
+            <span className="text-lg font-extrabold leading-none">{formatPrice(order.totalPrice)}</span>
+          </div>
         </div>
       </div>
 
-      <div className="mt-6 flex w-full gap-3">
-        <Button variant="secondary" size="lg" className="flex-1" onClick={onClose}>
-          Close
-        </Button>
-        <Button size="lg" className="flex-1" onClick={onMyTickets}>
-          My Tickets
+      <div className="flex gap-3">
+        <Button onClick={onMyTickets}>View my tickets</Button>
+        <Button variant="secondary" onClick={onClose}>
+          Back to home
         </Button>
       </div>
     </div>

@@ -8,6 +8,16 @@ export function formatRuntime(minutes: number): string {
   return `${minutes} min`;
 }
 
+/** Tue 15 Sep */
+export function formatShortDate(iso: string): string {
+  return parseISODate(iso).toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' });
+}
+
+/** Tuesday 15 September */
+export function formatWeekdayDate(iso: string): string {
+  return parseISODate(iso).toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' });
+}
+
 /** 4 September 2026 */
 export function formatLongDay(iso: string): string {
   return parseISODate(iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });

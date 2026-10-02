@@ -2,14 +2,15 @@ import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation } from '@tanstack/react-query';
-import type { Order, SeatHold, User } from '@/api/types';
+import type { Order, SeatHold, Session, User } from '@/api/types';
 import { createOrder } from '@/api/endpoints';
 import { parseApiError } from '@/api/errors';
 import { applyServerErrors } from '@/lib/form';
-import { formatPrice } from '@/lib/format';
+import { formatPrice, formatShortDate } from '@/lib/format';
 import { checkoutSchema, type CheckoutValues } from '@/lib/validation';
 import { Button } from '@/components/ui/Button';
 import { FormAlert, TextField } from '@/components/ui/Field';
+import { StepTabs } from './StepTabs';
 
 const FIELDS = ['fullName', 'email', 'mobileNumber', 'cardNumber', 'expiry', 'cvv'] as const;
 
@@ -25,8 +26,8 @@ const formatExpiry = (v: string) => {
 
 interface CheckoutStepProps {
   hold: SeatHold;
+  session: Session;
   user: User;
-  sectionBySeatId: Map<number, string>;
   onBack: () => void;
   onPaid: (order: Order) => void;
   onExpired: () => void;
@@ -35,8 +36,8 @@ interface CheckoutStepProps {
 
 export function CheckoutStep({
   hold,
+  session,
   user,
-  sectionBySeatId,
   onBack,
   onPaid,
   onExpired,
@@ -77,8 +78,18 @@ export function CheckoutStep({
     },
   });
 
+  const prefilled: Partial<Record<keyof CheckoutValues, boolean>> = {
+    fullName: !!user.fullName,
+    email: !!user.email,
+    mobileNumber: !!user.mobileNumber,
+  };
   const isValid = (name: keyof CheckoutValues) =>
-    (touchedFields[name] || dirtyFields[name]) && !errors[name];
+    (touchedFields[name] || dirtyFields[name] || prefilled[name]) && !errors[name];
+
+  // "2 x Adult, 1 x Child"
+  const counts = new Map<string, number>();
+  hold.seats.forEach((s) => counts.set(s.ticketType.name, (counts.get(s.ticketType.name) ?? 0) + 1));
+  const ticketLine = [...counts].map(([name, n]) => `${n} x ${name}`).join(', ');
 
   return (
     <form
@@ -88,70 +99,73 @@ export function CheckoutStep({
         setFormError(null);
         mutation.mutate({ holdId: hold.holdId, ...values });
       })}
-      className="grid grid-cols-[1fr_360px] gap-8"
+      className="grid grid-cols-[720px_1px_1fr] gap-5"
     >
       <div className="flex flex-col gap-6">
+        <StepTabs step="checkout" onSeats={mutation.isPending ? undefined : onBack} />
         {formError && <FormAlert>{formError}</FormAlert>}
 
-        <fieldset className="flex flex-col gap-4">
-          <legend className="mb-3 text-sm font-bold uppercase tracking-wider text-muted">Buyer details</legend>
+        <div className="flex flex-col gap-6">
           <TextField
             id="co-name"
-            label="Full Name"
+            label="Full name"
             required
             autoComplete="name"
+            placeholder="e.g. Meri Sanikidze"
             error={errors.fullName?.message}
             valid={!!isValid('fullName')}
             {...register('fullName')}
           />
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-2 gap-3">
             <TextField
               id="co-email"
               label="Email"
               type="email"
               required
               autoComplete="email"
+              placeholder="e.g. name@example.com"
               error={errors.email?.message}
               valid={!!isValid('email')}
               {...register('email')}
             />
             <TextField
               id="co-mobile"
-              label="Mobile Number"
+              label="Mobile number"
               type="tel"
               required
-              placeholder="5XX XXX XXX"
+              placeholder="e.g. 555 123 456"
               autoComplete="tel-national"
               error={errors.mobileNumber?.message}
               valid={!!isValid('mobileNumber')}
               {...register('mobileNumber')}
             />
           </div>
-        </fieldset>
+        </div>
 
-        <fieldset className="flex flex-col gap-4">
-          <legend className="mb-3 text-sm font-bold uppercase tracking-wider text-muted">Card details</legend>
+        <div className="h-px bg-surface" />
+
+        <div className="flex flex-col gap-6">
           <TextField
             id="co-card"
-            label="Card Number"
+            label="Card number"
             required
             inputMode="numeric"
             autoComplete="cc-number"
-            placeholder="4242 4242 4242 4242"
+            placeholder="e.g. 1234 4567 8901 2345"
             error={errors.cardNumber?.message}
             valid={!!isValid('cardNumber')}
             {...register('cardNumber', {
               onChange: (e) => setValue('cardNumber', formatCard(e.target.value)),
             })}
           />
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-2 gap-3">
             <TextField
               id="co-expiry"
               label="Expiry"
               required
               inputMode="numeric"
               autoComplete="cc-exp"
-              placeholder="MM/YY"
+              placeholder="e.g. 12/34"
               error={errors.expiry?.message}
               valid={!!isValid('expiry')}
               {...register('expiry', {
@@ -164,7 +178,7 @@ export function CheckoutStep({
               required
               inputMode="numeric"
               autoComplete="cc-csc"
-              placeholder="123"
+              placeholder="e.g. 123"
               maxLength={3}
               error={errors.cvv?.message}
               valid={!!isValid('cvv')}
@@ -173,36 +187,38 @@ export function CheckoutStep({
               })}
             />
           </div>
-        </fieldset>
+        </div>
       </div>
 
-      <aside className="flex flex-col rounded-2xl border border-line bg-surface-2 p-5">
-        <h3 className="mb-4 text-sm font-bold uppercase tracking-wider text-muted">Order summary</h3>
-        <ul className="flex flex-col divide-y divide-line">
-          {hold.seats.map((s) => (
-            <li key={s.seatId} className="flex items-center justify-between py-2.5 text-sm">
-              <span>
-                <span className="font-bold">{s.code}</span>
-                <span className="text-muted">
-                  {' · '}
-                  {sectionBySeatId.get(s.seatId) ?? 'Seat'} · {s.ticketType.name}
-                </span>
-              </span>
-              <span className="font-semibold">{formatPrice(s.price)}</span>
-            </li>
-          ))}
-        </ul>
-        <div className="mt-3 flex items-center justify-between border-t border-line pt-4">
-          <span className="font-semibold">Total</span>
-          <span className="text-2xl font-extrabold">{formatPrice(hold.subtotal)}</span>
+      <div className="bg-surface" />
+
+      <aside className="flex min-w-0 flex-col gap-3">
+        <h3 className="text-sm font-extrabold leading-none">Summary</h3>
+        <div className="flex flex-col gap-2.5 rounded-xl bg-surface p-4">
+          <div className="flex flex-col gap-2">
+            <p className="text-sm font-extrabold uppercase leading-none">{session.movie?.title}</p>
+            <p className="text-xs text-muted">
+              Hall {session.hall.name} · {formatShortDate(session.date)} · {session.time}
+            </p>
+          </div>
+          <div className="h-px bg-surface-3" />
+          <div className="flex items-center justify-between text-xs">
+            <span className="text-muted">Seats</span>
+            <span className="font-semibold">{hold.seats.map((s) => s.code).join(', ')}</span>
+          </div>
+          <div className="flex items-center justify-between text-xs">
+            <span className="text-muted">Tickets</span>
+            <span>{ticketLine}</span>
+          </div>
         </div>
 
-        <div className="mt-auto flex flex-col gap-2 pt-6">
-          <Button type="submit" size="lg" loading={mutation.isPending} className="w-full">
-            {mutation.isPending ? 'Processing payment…' : 'Pay & Complete Order'}
-          </Button>
-          <Button variant="ghost" onClick={onBack} disabled={mutation.isPending} className="w-full">
-            Back
+        <div className="mt-auto flex flex-col gap-3 pt-2.5">
+          <div className="flex items-center justify-between px-[5px]">
+            <span className="text-xs font-semibold">SUBTOTAL</span>
+            <span className="text-2xl font-extrabold leading-none">{formatPrice(hold.subtotal)}</span>
+          </div>
+          <Button type="submit" loading={mutation.isPending} className="w-full">
+            {mutation.isPending ? 'Processing payment…' : 'Pay: Complete order'}
           </Button>
         </div>
       </aside>
