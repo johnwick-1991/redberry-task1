@@ -9,7 +9,7 @@ import { useBookingStore } from '@/store/booking';
 import { initials } from '@/lib/format';
 import { useRequireAuth } from '@/lib/guards';
 import { Button } from '@/components/ui/Button';
-import { ChevronDown, LogoutIcon, TicketIcon, UserIcon } from '@/components/ui/icons';
+import { CheckIcon, ChevronDown, LogoutIcon, TicketIcon, UserIcon } from '@/components/ui/icons';
 import { SearchBox } from './SearchBox';
 
 export function Logo() {
@@ -105,8 +105,40 @@ function UserMenu() {
       {open && (
         <div
           role="menu"
-          className="absolute right-0 top-13 z-40 w-56 animate-fade-in overflow-hidden rounded-xl border border-line bg-surface py-1.5 shadow-2xl"
+          className="absolute right-0 top-13 z-40 w-72 animate-fade-in overflow-hidden rounded-xl border border-line bg-surface py-1.5 shadow-2xl"
         >
+          <div className="flex items-center gap-3 px-4 pb-3 pt-2">
+            {user.avatar ? (
+              <img src={user.avatar} alt="" className="size-10 rounded-full object-cover" />
+            ) : (
+              <span className="grid size-10 place-items-center rounded-full bg-surface-3 text-sm font-bold">
+                {initials(user.fullName, user.username)}
+              </span>
+            )}
+            <div className="min-w-0">
+              <p className="truncate text-sm font-bold">{displayName}</p>
+              <p className="truncate text-xs text-muted">{user.email}</p>
+            </div>
+          </div>
+          <Link
+            to="/profile"
+            className={clsx(
+              'mx-3 mb-2 block rounded-lg border px-3 py-2 text-xs',
+              complete ? 'border-ok/30 bg-ok/10 text-ok' : 'border-warn/30 bg-warn/10',
+            )}
+          >
+            {complete ? (
+              <span className="flex items-center gap-1.5 font-semibold">
+                Profile Complete <CheckIcon className="size-3.5" />
+              </span>
+            ) : (
+              <>
+                <span className="block font-semibold text-warn">Profile incomplete</span>
+                <span className="text-muted">Please complete your profile to enable booking.</span>
+              </>
+            )}
+          </Link>
+          <div className="mb-1 border-t border-line" />
           <Link
             role="menuitem"
             to="/profile"
