@@ -1,28 +1,37 @@
 import { useEffect, useRef, type ReactNode } from 'react';
 import { Link, useParams, useSearchParams } from 'react-router-dom';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import type { MovieDetail } from '@/api/types';
+import type { MovieDetail, Session } from '@/api/types';
 import { notifyMe } from '@/api/endpoints';
 import { errorMessage, parseApiError } from '@/api/errors';
 import { useMovie, useMovieSessions } from '@/api/queries';
 import { useAuthStore } from '@/store/auth';
 import { toast } from '@/store/toast';
-import { formatDate, formatPrice, formatRuntime, isWithinNextSevenDays, todayISO } from '@/lib/format';
+import {
+  formatDate,
+  formatDayMonth,
+  formatLongDate,
+  formatLongDay,
+  formatPrice,
+  formatRuntime,
+  isWithinNextSevenDays,
+  todayISO,
+} from '@/lib/format';
 import { addRecentlyViewed } from '@/lib/recentlyViewed';
 import { ageRestrictionMessage, isAgeRestricted, useRequireAuth, useStartBooking } from '@/lib/guards';
 import { Poster } from '@/components/MovieCards';
-import { SessionButton } from '@/components/SessionButton';
+import { SessionTicket } from '@/components/SessionButton';
 import { Button, buttonClasses } from '@/components/ui/Button';
 import { DateStrip } from '@/components/ui/DateStrip';
 import { AgeBadge, Chip, EmptyState, ErrorState } from '@/components/ui/States';
 import { Skeleton } from '@/components/ui/Spinner';
-import { AlertIcon, BellIcon, CheckIcon, ClockIcon } from '@/components/ui/icons';
+import { AlertIcon, BellIcon, CheckIcon, ClockIcon, FigmaIcon } from '@/components/ui/icons';
 
 function Fact({ label, children }: { label: string; children: ReactNode }) {
   return (
-    <div>
-      <dt className="text-xs font-bold uppercase tracking-wider text-muted">{label}</dt>
-      <dd className="mt-1 text-sm">{children}</dd>
+    <div className="flex flex-col gap-[7px] font-semibold">
+      <p className="text-xs uppercase text-muted">{label}</p>
+      <p className="text-sm">{children}</p>
     </div>
   );
 }
@@ -93,20 +102,27 @@ function SessionsSection({ movie }: { movie: MovieDetail }) {
     startBooking(requested, movie.ageRating);
   }, [requested, authReady, setParams, startBooking, movie.ageRating]);
 
+  const groups = sessions.data?.filter((g) => g.sessions.length > 0) ?? [];
+  const total = groups.reduce((n, g) => n + g.sessions.length, 0);
+
   return (
-    <section id="sessions" className="mx-auto max-w-[1600px] scroll-mt-24 px-10 pt-14">
-      <div className="mb-6 flex items-end justify-between gap-8">
-        <h2 className="text-2xl font-bold">Sessions</h2>
+    <section id="sessions" className="flex min-w-0 flex-1 scroll-mt-6 flex-col gap-[27px] pb-[26px]">
+      <div className="flex flex-col gap-3.5">
+        <div className="flex flex-col gap-[7px]">
+          <h2 className="text-xl font-extrabold leading-none">Sessions</h2>
+          <p className="text-xs text-muted">
+            {sessions.isPending ? '\u00a0' : `${total} ${total === 1 ? 'session' : 'sessions'} on ${formatLongDate(date)}`}
+          </p>
+        </div>
         <DateStrip
           value={date}
           onChange={(d) => setParams({ date: d }, { replace: true, preventScrollReset: true })}
           available={available}
-          className="w-[640px]"
         />
       </div>
 
       {blocked && (
-        <p className="mb-5 flex items-center gap-2 rounded-xl border border-bad/30 bg-bad/10 px-4 py-3 text-sm text-bad">
+        <p className="flex items-center gap-2 self-start rounded-xl bg-tint-red px-4 py-3 text-xs font-semibold text-accent">
           <AlertIcon className="size-4 shrink-0" />
           {ageRestrictionMessage(movie.ageRating)}
         </p>
@@ -115,50 +131,69 @@ function SessionsSection({ movie }: { movie: MovieDetail }) {
       {sessions.isPending ? (
         <div className="flex flex-col gap-6">
           {Array.from({ length: 2 }, (_, i) => (
-            <div key={i}>
-              <Skeleton className="mb-3 h-5 w-48" />
-              <div className="flex gap-3">
-                {Array.from({ length: 4 }, (_, j) => (
-                  <Skeleton key={j} className="h-28 w-52 rounded-xl" />
-                ))}
-              </div>
+            <div key={i} className="flex flex-col gap-3">
+              <Skeleton className="h-4 w-32" />
+              <Skeleton className="h-[126px] w-[454px] rounded-[18px]" />
             </div>
           ))}
         </div>
       ) : sessions.isError ? (
         <ErrorState error={sessions.error} onRetry={() => sessions.refetch()} title="Couldn't load sessions" />
-      ) : sessions.data.every((g) => g.sessions.length === 0) ? (
+      ) : groups.length === 0 ? (
         <EmptyState
           icon={<ClockIcon className="size-10" />}
           title="No sessions on this date"
           description="This film has no showings on the selected day. Try another date."
         />
       ) : (
-        <div className="flex flex-col gap-6">
-          {sessions.data
-            .filter((g) => g.sessions.length > 0)
-            .map((group) => (
-              <div key={group.venue.id} className="rounded-2xl border border-line bg-surface p-5">
-                <h3 className="mb-4 flex items-baseline gap-2">
-                  <span className="text-lg font-bold">{group.venue.name}</span>
-                  <span className="text-sm text-muted">{group.venue.city}</span>
-                </h3>
-                <div className="flex flex-wrap gap-3">
-                  {group.sessions.map((s) => (
-                    <SessionButton
-                      key={s.id}
-                      session={s}
-                      showVenue={false}
-                      blocked={blocked}
-                      onSelect={() => startBooking(s.id, movie.ageRating)}
-                    />
-                  ))}
+        groups.map((group) => (
+          <div key={group.venue.id} className="flex flex-col gap-3">
+            <h3 className="text-sm font-extrabold leading-none">{group.venue.name}</h3>
+            <div className="flex flex-wrap gap-2.5">
+              {byHall(group.sessions).map(([hall, list]) => (
+                <div key={hall} className="flex flex-col gap-[9px] rounded-[18px] bg-surface p-[15px]">
+                  <p className="text-xs font-semibold leading-none">Hall {hall}</p>
+                  <div className="flex flex-wrap gap-[9px]">
+                    {list.map((s) => (
+                      <SessionTicket key={s.id} session={s} blocked={blocked} onSelect={() => startBooking(s.id, movie.ageRating)} />
+                    ))}
+                  </div>
                 </div>
-              </div>
-            ))}
-        </div>
+              ))}
+            </div>
+          </div>
+        ))
       )}
     </section>
+  );
+}
+
+/** Group a venue's sessions by hall, keeping the API's time order. */
+function byHall(sessions: Session[]): [string, Session[]][] {
+  const halls = new Map<string, Session[]>();
+  sessions.forEach((s) => halls.set(s.hall.name, [...(halls.get(s.hall.name) ?? []), s]));
+  return [...halls.entries()];
+}
+
+function Details({ movie }: { movie: MovieDetail }) {
+  return (
+    <aside className="flex w-[441px] shrink-0 flex-col gap-[17px] px-[26px]">
+      <h2 className="text-xl font-extrabold leading-none">Details</h2>
+      <Fact label="Director">{movie.director || '—'}</Fact>
+      <Fact label="Main cast">{movie.cast || '—'}</Fact>
+      <Fact label="Genre">{movie.genres.map((g) => g.name).join(', ') || '—'}</Fact>
+      <Fact label="Duration">{movie.runtimeMinutes} minutes</Fact>
+      <Fact label="Release date">{formatLongDay(movie.releaseDate)}</Fact>
+      <Fact label="Formats">{movie.formats.map((f) => f.name).join(', ') || '—'}</Fact>
+      {movie.fromPrice !== null && <Fact label="From">{formatPrice(movie.fromPrice)}</Fact>}
+      <div className="flex flex-col gap-[7px] rounded-xl bg-tint-warn px-[13px] py-[9px] text-xs text-warn">
+        <p className="font-semibold">RATING NOTE</p>
+        <p className="flex gap-[7px]">
+          <span className="font-semibold">{movie.ageRating.code}</span>
+          <span className="leading-[1.3]">{movie.ageRating.description}</span>
+        </p>
+      </div>
+    </aside>
   );
 }
 
@@ -173,8 +208,8 @@ export function MoviePage() {
   if (isPending) {
     return (
       <div>
-        <Skeleton className="h-[520px] w-full rounded-none" />
-        <div className="mx-auto max-w-[1600px] px-10 pt-10">
+        <Skeleton className="h-[567px] w-full rounded-none" />
+        <div className="px-[51px] pt-10">
           <Skeleton className="h-8 w-1/3" />
           <Skeleton className="mt-4 h-4 w-2/3" />
         </div>
@@ -185,7 +220,7 @@ export function MoviePage() {
   if (isError) {
     const notFound = parseApiError(error).kind === 'notFound';
     return (
-      <div className="mx-auto max-w-[1600px] px-10 py-20">
+      <div className="px-[51px] pb-10 pt-[140px]">
         {notFound ? (
           <EmptyState
             title="Film not found"
@@ -203,112 +238,62 @@ export function MoviePage() {
     );
   }
 
-  const cast = movie.cast?.split(',').map((c) => c.trim()).filter(Boolean) ?? [];
-
   return (
-    <div>
-      <section className="relative h-[560px] overflow-hidden">
+    <div className="flex flex-col gap-[34px]">
+      <section className="relative h-[567px] overflow-hidden">
         {movie.backdropUrl && (
           <img src={movie.backdropUrl} alt="" className="absolute inset-0 size-full animate-ken-burns object-cover" />
         )}
-        <div className="absolute inset-0 bg-gradient-to-r from-bg via-bg/85 to-bg/20" />
-        <div className="absolute inset-0 bg-gradient-to-t from-bg via-bg/10 to-transparent" />
+        <div className="absolute inset-0 bg-bg/20 backdrop-blur-[5px]" />
+        <div className="absolute inset-x-0 bottom-0 h-32 bg-gradient-to-t from-bg to-transparent" />
 
-        <div className="relative mx-auto flex h-full max-w-[1600px] items-end gap-10 px-10 pb-12">
+        <div className="absolute left-[60px] top-[152px] flex items-end gap-[34px]">
           <Poster
             src={movie.posterUrl}
             title={movie.title}
-            className="hidden h-[400px] w-[267px] shrink-0 rounded-2xl border border-line shadow-2xl lg:block"
+            className="h-[374px] w-[289px] shrink-0 rounded-[14px] shadow-[0_4px_64px_rgb(0_0_0/0.2)]"
           />
-          <div className="max-w-3xl animate-hero-in">
-            {movie.isComingSoon && (
-              <p className="mb-2 text-sm font-bold uppercase tracking-[0.2em] text-warn">
-                Coming {formatDate(movie.releaseDate)}
-              </p>
-            )}
-            <h1 className="text-5xl font-extrabold leading-tight tracking-tight">{movie.title}</h1>
-            <div className="mt-4 flex flex-wrap items-center gap-3 text-sm">
-              <AgeBadge rating={movie.ageRating} />
-              <span className="flex items-center gap-1.5 text-ink/80">
-                <ClockIcon className="size-4" /> {formatRuntime(movie.runtimeMinutes)}
-              </span>
-              {movie.genres.map((g) => (
-                <Chip key={g.id} className="normal-case tracking-normal">
-                  {g.name}
+          <div className="flex w-[580px] animate-hero-in flex-col items-start gap-[15px] py-[9px]">
+            <span className="rounded-full bg-tint-red px-2.5 py-1.5 text-xs font-semibold uppercase leading-none text-accent">
+              {movie.isComingSoon ? `Coming ${formatDayMonth(movie.releaseDate)}` : 'Now playing'}
+            </span>
+            <div className="flex flex-col gap-5">
+              <div className="flex flex-col gap-[15px]">
+                <h1 className="text-[40px] font-extrabold uppercase leading-none">{movie.title}</h1>
+                {movie.synopsis && <p className="w-[560px] text-sm leading-[1.3]">{movie.synopsis}</p>}
+              </div>
+              <div className="flex flex-wrap gap-[7px]">
+                <AgeBadge rating={movie.ageRating} className="px-2.5 py-1.5" />
+                <Chip className="px-2.5">
+                  <FigmaIcon name="timer" className="size-3.5" />
+                  {formatRuntime(movie.runtimeMinutes)}
                 </Chip>
-              ))}
+                {movie.formats.map((f) => (
+                  <Chip key={f.id} className="px-2.5 uppercase">
+                    {f.name}
+                  </Chip>
+                ))}
+              </div>
             </div>
-            {movie.synopsis && <p className="mt-5 max-w-2xl leading-relaxed text-ink/85">{movie.synopsis}</p>}
-            <div className="mt-6 flex items-center gap-4">
-              {movie.isComingSoon ? (
-                <NotifyButton movie={movie} />
-              ) : (
-                <>
-                  <a href="#sessions" className={buttonClasses('primary', 'lg')}>
-                    Buy Ticket
-                  </a>
-                  {movie.fromPrice !== null && (
-                    <span className="text-sm text-muted">
-                      Tickets from <span className="font-bold text-ink">{formatPrice(movie.fromPrice)}</span>
-                    </span>
-                  )}
-                </>
-              )}
-            </div>
+            {movie.isComingSoon && <NotifyButton movie={movie} />}
           </div>
         </div>
       </section>
 
-      <section className="mx-auto max-w-[1600px] px-10 pt-10">
-        <dl className="grid grid-cols-4 gap-8 rounded-2xl border border-line bg-surface p-6">
-          <Fact label="Director">{movie.director || '—'}</Fact>
-          <Fact label="Starring">{cast.length ? cast.join(', ') : '—'}</Fact>
-          <Fact label="Release date">{formatDate(movie.releaseDate)}</Fact>
-          <Fact label="Runtime">{formatRuntime(movie.runtimeMinutes)}</Fact>
-          <Fact label="Genre">{movie.genres.map((g) => g.name).join(', ') || '—'}</Fact>
-          <Fact label="Age rating">
-            <span className="flex items-start gap-2">
-              <AgeBadge rating={movie.ageRating} />
-              <span className="text-muted">{movie.ageRating.description}</span>
-            </span>
-          </Fact>
-          <Fact label="Available formats">
-            {movie.formats.length ? (
-              <span className="flex flex-wrap gap-1.5">
-                {movie.formats.map((f) => (
-                  <Chip key={f.id}>{f.name}</Chip>
-                ))}
-              </span>
-            ) : (
-              '—'
-            )}
-          </Fact>
-        </dl>
-        {movie.ageRating.minAge >= 16 && (
-          <div className="mt-4 flex items-start gap-3 rounded-2xl border border-warn/30 bg-warn/10 px-5 py-4 text-sm">
-            <AlertIcon className="mt-0.5 size-4 shrink-0 text-warn" />
-            <div>
-              <p className="text-xs font-bold uppercase tracking-wider text-warn">Rating note</p>
-              <p className="mt-1 text-ink/85">
-                <span className="font-bold text-warn">{movie.ageRating.code}</span> {movie.ageRating.description}{' '}
-                Tickets require an account aged {movie.ageRating.minAge} or over.
-              </p>
-            </div>
-          </div>
+      <div className="flex items-start gap-2.5 px-[51px]">
+        {movie.isComingSoon ? (
+          <section className="min-w-0 flex-1">
+            <EmptyState
+              icon={<BellIcon className="size-10" />}
+              title="Not in cinemas yet"
+              description={`${movie.title} opens on ${formatDate(movie.releaseDate)}. Sessions will appear here once tickets go on sale.`}
+            />
+          </section>
+        ) : (
+          <SessionsSection movie={movie} />
         )}
-      </section>
-
-      {movie.isComingSoon ? (
-        <section className="mx-auto max-w-[1600px] px-10 pt-14">
-          <EmptyState
-            icon={<BellIcon className="size-10" />}
-            title="Not in cinemas yet"
-            description={`${movie.title} opens on ${formatDate(movie.releaseDate)}. Sessions will appear here once tickets go on sale.`}
-          />
-        </section>
-      ) : (
-        <SessionsSection movie={movie} />
-      )}
+        <Details movie={movie} />
+      </div>
     </div>
   );
 }

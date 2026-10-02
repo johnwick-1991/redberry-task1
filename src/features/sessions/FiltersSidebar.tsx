@@ -2,17 +2,19 @@ import clsx from 'clsx';
 import type { ReactNode } from 'react';
 import type { FilterOptions } from '@/api/types';
 import { DateStrip } from '@/components/ui/DateStrip';
-import { Button } from '@/components/ui/Button';
 import { Skeleton } from '@/components/ui/Spinner';
-import { CheckIcon } from '@/components/ui/icons';
+import { FigmaIcon } from '@/components/ui/icons';
 import { availableFormats, type SessionsUrlState } from './useSessionsUrlState';
 
 function Section({ title, children }: { title: string; children: ReactNode }) {
   return (
-    <fieldset className="border-b border-line py-5 first:pt-0 last:border-b-0">
-      <legend className="mb-3 text-xs font-bold uppercase tracking-wider text-muted">{title}</legend>
-      {children}
-    </fieldset>
+    <div role="group" aria-label={title} className="flex flex-col gap-6">
+      <div className="flex flex-col gap-3">
+        <p className="text-xs font-semibold uppercase leading-none tracking-[0.72px] text-muted">{title}</p>
+        {children}
+      </div>
+      <div className="h-px bg-surface-3" />
+    </div>
   );
 }
 
@@ -28,18 +30,18 @@ function Check({
   sub?: string;
 }) {
   return (
-    <label className="flex cursor-pointer items-center gap-3 rounded-lg px-2 py-1.5 transition-colors hover:bg-surface-3">
+    <label className="group flex cursor-pointer items-center gap-2.5">
       <input type="checkbox" checked={checked} onChange={onChange} className="peer sr-only" />
       <span
         className={clsx(
-          'grid size-5 shrink-0 place-items-center rounded-md border transition-colors peer-focus-visible:outline-2 peer-focus-visible:outline-accent',
-          checked ? 'border-accent bg-accent text-white' : 'border-line bg-surface-2',
+          'grid size-[18px] shrink-0 place-items-center rounded-[5px] border-[1.5px] transition-colors peer-focus-visible:outline-2 peer-focus-visible:outline-accent',
+          checked ? 'border-accent bg-accent text-white' : 'border-disabled group-hover:border-muted',
         )}
       >
-        {checked && <CheckIcon className="size-3.5" strokeWidth={3} />}
+        {checked && <FigmaIcon name="confirm" className="size-3" />}
       </span>
-      <span className="flex-1 text-sm">{label}</span>
-      {sub && <span className="text-xs text-muted">{sub}</span>}
+      <span className="text-sm font-semibold leading-none">{label}</span>
+      {sub && <span className="text-xs text-muted">· {sub}</span>}
     </label>
   );
 }
@@ -57,14 +59,16 @@ interface Props {
 }
 
 export function FiltersSidebar({ options, state, selectedFormats, activeCount, onChange, onClear }: Props) {
+  const shell = 'sticky top-6 flex w-80 shrink-0 flex-col self-start rounded-2xl bg-surface p-6';
+
   if (!options) {
     return (
-      <aside className="sticky top-24 flex w-80 shrink-0 flex-col gap-4 self-start rounded-2xl border border-line bg-surface p-5">
+      <aside className={clsx(shell, 'gap-6')}>
         {Array.from({ length: 5 }, (_, i) => (
           <div key={i}>
             <Skeleton className="mb-3 h-3 w-20" />
-            <Skeleton className="h-8 w-full" />
-            <Skeleton className="mt-2 h-8 w-full" />
+            <Skeleton className="h-5 w-full" />
+            <Skeleton className="mt-3 h-5 w-full" />
           </div>
         ))}
       </aside>
@@ -74,70 +78,81 @@ export function FiltersSidebar({ options, state, selectedFormats, activeCount, o
   const formats = availableFormats(options, state.venues);
 
   return (
-    <aside className="sticky top-24 flex max-h-[calc(100vh-7rem)] w-80 shrink-0 flex-col self-start rounded-2xl border border-line bg-surface">
-      <div className="flex-1 overflow-y-auto p-5">
-        <Section title="Venue">
-          {options.venues.map((v) => (
-            <Check
-              key={v.slug}
-              label={v.name}
-              sub={v.city}
-              checked={state.venues.includes(v.slug)}
-              onChange={() => onChange({ venues: toggle(state.venues, v.slug) })}
-            />
-          ))}
-        </Section>
+    <aside className={clsx(shell, 'max-h-[calc(100vh-3rem)] gap-6 overflow-y-auto')} aria-label="Filters">
+      <h2 className="text-lg font-extrabold leading-none">Filters</h2>
+      <Section title="Venue">
+        {options.venues.map((v) => (
+          <Check
+            key={v.slug}
+            label={v.name}
+            sub={v.city}
+            checked={state.venues.includes(v.slug)}
+            onChange={() => onChange({ venues: toggle(state.venues, v.slug) })}
+          />
+        ))}
+      </Section>
 
-        <Section title="Date">
-          <DateStrip compact value={state.date} onChange={(date) => onChange({ date })} />
-        </Section>
+      <Section title="Date">
+        <DateStrip compact value={state.date} onChange={(date) => onChange({ date })} />
+      </Section>
 
-        <Section title="Format">
-          {formats.map((f) => (
-            <Check
-              key={f.slug}
-              label={f.name}
-              sub={f.priceUplift > 0 ? `+₾${f.priceUplift}` : undefined}
-              checked={selectedFormats.includes(f.slug)}
-              onChange={() => onChange({ formats: toggle(selectedFormats, f.slug) })}
-            />
-          ))}
-          {state.venues.length > 0 && (
-            <p className="mt-2 px-2 text-xs text-muted">Showing formats available at the selected venues.</p>
-          )}
-        </Section>
+      <Section title="Format">
+        {formats.map((f) => (
+          <Check
+            key={f.slug}
+            label={f.name}
+            checked={selectedFormats.includes(f.slug)}
+            onChange={() => onChange({ formats: toggle(selectedFormats, f.slug) })}
+          />
+        ))}
+      </Section>
 
-        <Section title="Language">
-          {options.languages.map((l) => (
-            <Check
-              key={l.slug}
-              label={l.name}
-              checked={state.languages.includes(l.slug)}
-              onChange={() => onChange({ languages: toggle(state.languages, l.slug) })}
-            />
-          ))}
-        </Section>
+      <Section title="Language">
+        {options.languages.map((l) => (
+          <Check
+            key={l.slug}
+            label={l.name}
+            checked={state.languages.includes(l.slug)}
+            onChange={() => onChange({ languages: toggle(state.languages, l.slug) })}
+          />
+        ))}
+      </Section>
 
-        <Section title="Time of Day">
-          {options.timeBands.map((b) => (
+      <Section title="Time of Day">
+        {options.timeBands.map((b) => {
+          const [name, range] = splitBand(b.label);
+          return (
             <Check
               key={b.id}
-              label={b.label}
+              label={name}
+              sub={range}
               checked={state.bands.includes(b.id)}
               onChange={() => onChange({ bands: toggle(state.bands, b.id) })}
             />
-          ))}
-        </Section>
-      </div>
+          );
+        })}
+      </Section>
 
-      <div className="flex items-center justify-between gap-3 border-t border-line p-4">
-        <span className="text-sm text-muted">
+      <div className="mt-auto flex flex-col items-center gap-2.5 pt-6">
+        {(activeCount > 0 || state.search) && (
+          <button
+            type="button"
+            onClick={onClear}
+            className="w-full cursor-pointer rounded-full border border-ink px-4 py-2 text-xs font-semibold transition-colors hover:bg-tint-white"
+          >
+            Clear filters
+          </button>
+        )}
+        <span className="text-xs text-muted">
           {activeCount} {activeCount === 1 ? 'filter' : 'filters'} active
         </span>
-        <Button variant="secondary" size="sm" onClick={onClear} disabled={activeCount === 0 && !state.search}>
-          Clear All Filters
-        </Button>
       </div>
     </aside>
   );
+}
+
+/** "Evening (after 18:00)" -> ["Evening", "after 18:00"], to match the label · range layout. */
+function splitBand(label: string): [string, string | undefined] {
+  const m = label.match(/^(.*?)\s*\((.*)\)$/);
+  return m ? [m[1], m[2]] : [label, undefined];
 }

@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import type { SessionGroup } from '@/api/types';
 import { useFilterOptions, useSessions } from '@/api/queries';
 import { useAuthStore } from '@/store/auth';
-import { formatLongDate, formatRuntime } from '@/lib/format';
+import { formatRuntime } from '@/lib/format';
 import { ageRestrictionMessage, isAgeRestricted } from '@/lib/guards';
 import { Poster } from '@/components/MovieCards';
 import { SessionButton } from '@/components/SessionButton';
@@ -11,7 +11,7 @@ import { Button } from '@/components/ui/Button';
 import { Pagination } from '@/components/ui/Pagination';
 import { AgeBadge, EmptyState, ErrorState } from '@/components/ui/States';
 import { Skeleton } from '@/components/ui/Spinner';
-import { AlertIcon, FilmIcon, SearchIcon } from '@/components/ui/icons';
+import { AlertIcon, ChevronDown, FigmaIcon, FilmIcon } from '@/components/ui/icons';
 import { FiltersSidebar } from './FiltersSidebar';
 import { DEFAULT_SORT, useSessionsUrlState } from './useSessionsUrlState';
 
@@ -22,38 +22,37 @@ function MovieGroup({ group }: { group: SessionGroup }) {
   const blocked = isAgeRestricted(user, movie.ageRating);
 
   return (
-    <article className="flex gap-6 rounded-2xl border border-line bg-surface p-5">
-      <Link to={`/movies/${movie.slug}`} className="shrink-0">
-        <Poster src={movie.posterUrl} title={movie.title} className="h-48 w-32 rounded-xl" />
-      </Link>
-      <div className="min-w-0 flex-1">
-        <div className="flex items-center gap-3">
-          <Link to={`/movies/${movie.slug}`} className="truncate text-xl font-bold hover:text-accent">
-            {movie.title}
-          </Link>
-          <AgeBadge rating={movie.ageRating} />
+    <article className="flex flex-col gap-3.5">
+      <div className="flex items-center gap-4">
+        <Link to={`/movies/${movie.slug}`} className="shrink-0">
+          <Poster src={movie.posterUrl} title={movie.title} className="h-20 w-14 rounded-lg" />
+        </Link>
+        <div className="flex flex-col gap-3">
+          <div className="flex items-center gap-3">
+            <Link to={`/movies/${movie.slug}`} className="text-lg font-extrabold leading-none hover:text-accent">
+              {movie.title}
+            </Link>
+            <AgeBadge rating={movie.ageRating} />
+          </div>
           <span className="text-sm text-muted">{formatRuntime(movie.runtimeMinutes)}</span>
         </div>
-        {movie.genres.length > 0 && (
-          <p className="mt-1 text-sm text-muted">{movie.genres.map((g) => g.name).join(' · ')}</p>
-        )}
-        {blocked && (
-          <p className="mt-3 flex items-center gap-2 rounded-lg border border-bad/30 bg-bad/10 px-3 py-2 text-sm text-bad">
-            <AlertIcon className="size-4 shrink-0" />
-            {ageRestrictionMessage(movie.ageRating)}
-          </p>
-        )}
-        <div className="mt-4 flex flex-wrap gap-3">
-          {sessions.map((s) => (
-            <SessionButton
-              key={s.id}
-              session={s}
-              blocked={blocked}
-              // Per the design: open the film's page, which then opens seat selection for this session.
-              onSelect={() => navigate(`/movies/${movie.slug}?date=${s.date}&session=${s.id}`)}
-            />
-          ))}
-        </div>
+      </div>
+      {blocked && (
+        <p className="flex items-center gap-2 self-start rounded-xl bg-tint-red px-3 py-2 text-xs font-semibold text-accent">
+          <AlertIcon className="size-4 shrink-0" />
+          {ageRestrictionMessage(movie.ageRating)}
+        </p>
+      )}
+      <div className="rail flex gap-3 overflow-x-auto">
+        {sessions.map((s) => (
+          <SessionButton
+            key={s.id}
+            session={s}
+            blocked={blocked}
+            // Per the design: open the film's page, which then opens seat selection for this session.
+            onSelect={() => navigate(`/movies/${movie.slug}?date=${s.date}&session=${s.id}`)}
+          />
+        ))}
       </div>
     </article>
   );
@@ -61,18 +60,20 @@ function MovieGroup({ group }: { group: SessionGroup }) {
 
 function ListSkeleton() {
   return (
-    <div className="flex flex-col gap-5" aria-busy="true" aria-label="Loading sessions">
+    <div className="flex flex-col gap-8" aria-busy="true" aria-label="Loading sessions">
       {Array.from({ length: 4 }, (_, i) => (
-        <div key={i} className="flex gap-6 rounded-2xl border border-line bg-surface p-5">
-          <Skeleton className="h-48 w-32 rounded-xl" />
-          <div className="flex-1">
-            <Skeleton className="h-6 w-1/3" />
-            <Skeleton className="mt-2 h-4 w-1/4" />
-            <div className="mt-5 flex gap-3">
-              {Array.from({ length: 4 }, (_, j) => (
-                <Skeleton key={j} className="h-28 w-52 rounded-xl" />
-              ))}
+        <div key={i} className="flex flex-col gap-3.5">
+          <div className="flex items-center gap-4">
+            <Skeleton className="h-20 w-14 rounded-lg" />
+            <div className="flex flex-col gap-3">
+              <Skeleton className="h-5 w-48" />
+              <Skeleton className="h-4 w-20" />
             </div>
+          </div>
+          <div className="flex gap-3">
+            {Array.from({ length: 4 }, (_, j) => (
+              <Skeleton key={j} className="h-[98px] w-[252px] rounded-2xl" />
+            ))}
           </div>
         </div>
       ))}
@@ -100,13 +101,13 @@ export function SessionsPage() {
   const loading = options.isPending || sessions.isPending;
 
   return (
-    <div className="mx-auto max-w-[1600px] px-10 py-10">
-      <div className="mb-8">
-        <h1 className="text-4xl font-extrabold tracking-tight">Sessions</h1>
-        <p className="mt-2 text-muted">{formatLongDate(state.date)}</p>
+    <div className="px-[51px] pt-[117px]">
+      <div className="mb-9 flex flex-col gap-1.5">
+        <h1 className="text-2xl font-extrabold leading-none">Sessions</h1>
+        <p className="text-sm text-muted">Browse showtimes across all venues</p>
       </div>
 
-      <div className="flex items-start gap-8">
+      <div className="flex items-start gap-[51px]">
         <FiltersSidebar
           options={options.data}
           state={state}
@@ -117,24 +118,33 @@ export function SessionsPage() {
         />
 
         <section className="min-w-0 flex-1">
-          <div className="mb-5 flex items-center gap-4">
-            <div className="relative flex-1">
-              <SearchIcon className="pointer-events-none absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-muted" />
+          <div className="mb-6 flex items-center gap-6">
+            <div className="flex-1 text-xs font-semibold" aria-live="polite">
+              {loading ? (
+                <Skeleton className="h-4 w-32" />
+              ) : meta && meta.totalSessions > 0 ? (
+                <>Showing {meta.totalSessions} {meta.totalSessions === 1 ? 'session' : 'sessions'}</>
+              ) : sessions.isError ? null : (
+                'No sessions found'
+              )}
+            </div>
+            <div className="relative w-64">
+              <FigmaIcon name="search" className="pointer-events-none absolute left-3 top-1/2 size-3.5 -translate-y-1/2 text-muted" />
               <input
                 type="search"
                 value={term}
                 onChange={(e) => setTerm(e.target.value)}
                 placeholder="Search by film title"
                 aria-label="Search sessions by film title"
-                className="h-11 w-full rounded-lg border border-line bg-surface pl-10 pr-3 text-sm outline-none focus:border-ink/40"
+                className="h-9 w-full rounded-full bg-surface pl-8 pr-3 text-xs font-semibold outline-none placeholder:text-muted focus:bg-surface-3"
               />
             </div>
-            <label className="flex items-center gap-2 text-sm text-muted">
-              Sort by
+            <label className="relative flex items-center gap-1.5 text-xs text-muted">
+              Sort:
               <select
                 value={state.sort}
                 onChange={(e) => update({ sort: e.target.value })}
-                className="h-11 cursor-pointer rounded-lg border border-line bg-surface px-3 text-sm text-ink outline-none focus:border-ink/40"
+                className="cursor-pointer appearance-none bg-transparent pr-5 text-xs font-extrabold text-ink outline-none"
               >
                 {(options.data?.sorts ?? [{ id: DEFAULT_SORT, label: 'Showtime: earliest first' }]).map((s) => (
                   <option key={s.id} value={s.id}>
@@ -142,22 +152,8 @@ export function SessionsPage() {
                   </option>
                 ))}
               </select>
+              <ChevronDown className="pointer-events-none absolute right-0 size-4 text-ink" />
             </label>
-          </div>
-
-          <div className="mb-4 h-5 text-sm text-muted" aria-live="polite">
-            {loading ? (
-              <Skeleton className="h-4 w-36" />
-            ) : meta && meta.totalSessions > 0 ? (
-              <>
-                Showing <span className="font-semibold text-ink">{meta.totalSessions}</span>{' '}
-                {meta.totalSessions === 1 ? 'session' : 'sessions'}
-                {' · '}
-                {meta.totalMovies} {meta.totalMovies === 1 ? 'film' : 'films'}
-              </>
-            ) : sessions.isError ? null : (
-              'No sessions found'
-            )}
           </div>
 
           {loading ? (
@@ -190,9 +186,12 @@ export function SessionsPage() {
               />
             )
           ) : (
-            <div className="flex flex-col gap-5">
-              {groups.map((g) => (
-                <MovieGroup key={g.movie.id} group={g} />
+            <div className="flex flex-col gap-8">
+              {groups.map((g, i) => (
+                <div key={g.movie.id} className="flex flex-col gap-8">
+                  {i > 0 && <div className="h-px bg-surface-3" />}
+                  <MovieGroup group={g} />
+                </div>
               ))}
               {meta && (
                 <div className="mt-4">

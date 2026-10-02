@@ -8,6 +8,11 @@ export function formatRuntime(minutes: number): string {
   return `${minutes} min`;
 }
 
+/** 4 September 2026 */
+export function formatLongDay(iso: string): string {
+  return parseISODate(iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
+}
+
 /** "IN CINEMAS 2 OCTOBER" style: 2 October */
 export function formatDayMonth(iso: string): string {
   return parseISODate(iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'long' });

@@ -1,7 +1,7 @@
 import clsx from 'clsx';
-import { nextSevenDays, parseISODate, todayISO } from '@/lib/format';
+import { nextSevenDays, parseISODate } from '@/lib/format';
 
-/** Horizontal picker for the next 7 days. Exactly one date is selected; today by default. */
+/** The next 7 days; exactly one is selected, today by default. `compact` is the sidebar size. */
 export function DateStrip({
   value,
   onChange,
@@ -12,17 +12,15 @@ export function DateStrip({
   value: string;
   onChange: (date: string) => void;
   className?: string;
-  /** Narrow containers (the filter sidebar): wrap onto two rows. */
   compact?: boolean;
   /** Dates that have sessions. When given, the other days are shown but disabled. */
   available?: string[];
 }) {
   const days = nextSevenDays();
-  const today = todayISO();
 
   return (
-    <div role="radiogroup" aria-label="Date" className={clsx('grid gap-1.5', compact ? 'grid-cols-4' : 'grid-cols-7', className)}>
-      {days.map((iso, i) => {
+    <div role="radiogroup" aria-label="Date" className={clsx('flex', compact ? 'gap-1.5' : 'gap-[7px]', className)}>
+      {days.map((iso) => {
         const d = parseISODate(iso);
         const selected = iso === value;
         const disabled = !selected && available !== undefined && !available.includes(iso);
@@ -32,25 +30,27 @@ export function DateStrip({
             type="button"
             role="radio"
             aria-checked={selected}
+            aria-label={d.toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' })}
             disabled={disabled}
             title={disabled ? 'No sessions on this day' : undefined}
             onClick={() => onChange(iso)}
             className={clsx(
-              'flex flex-col items-center rounded-lg border px-1 py-2 transition-colors',
+              'flex shrink-0 flex-col items-center justify-center gap-1.5 leading-none transition-colors',
+              compact
+                ? 'h-[54px] min-w-0 flex-1 rounded-lg text-xs font-semibold shadow-[0_1px_2px_rgb(0_0_0/0.2)]'
+                : 'size-20 rounded-2xl',
               selected
-                ? 'cursor-pointer border-accent bg-accent text-white shadow-lg shadow-accent/25'
+                ? 'cursor-pointer bg-accent text-white'
                 : disabled
-                  ? 'cursor-not-allowed border-line/50 bg-surface-2/40 text-ink opacity-40'
-                  : 'cursor-pointer border-line bg-surface-2 text-ink hover:border-ink/30',
+                  ? 'cursor-not-allowed opacity-40'
+                  : 'cursor-pointer hover:bg-disabled',
+              !selected && (compact ? 'bg-surface-3' : 'bg-surface'),
             )}
           >
-            <span className={clsx('text-[11px] font-semibold uppercase', !selected && 'text-muted')}>
-              {iso === today ? 'Today' : i === 1 ? 'Tmrw' : d.toLocaleDateString('en-GB', { weekday: 'short' })}
+            <span className={compact ? '' : 'text-xs font-semibold'}>
+              {d.toLocaleDateString('en-GB', { weekday: 'short' })}
             </span>
-            <span className="text-lg font-bold leading-tight">{d.getDate()}</span>
-            <span className={clsx('text-[11px]', !selected && 'text-muted')}>
-              {d.toLocaleDateString('en-GB', { month: 'short' })}
-            </span>
+            <span className={compact ? '' : 'text-lg font-extrabold'}>{d.getDate()}</span>
           </button>
         );
       })}

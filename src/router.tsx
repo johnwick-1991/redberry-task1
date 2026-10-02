@@ -27,7 +27,7 @@ import { buttonClasses } from '@/components/ui/Button';
 
 function NotFound() {
   return (
-    <div className="mx-auto max-w-[1600px] px-10 py-24">
+    <div className="px-[51px] pb-10 pt-[140px]">
       <EmptyState
         title="Page not found"
         description="The page you are looking for does not exist or has moved."

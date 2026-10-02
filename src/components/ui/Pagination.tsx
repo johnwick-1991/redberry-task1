@@ -25,27 +25,18 @@ export function Pagination({
 }) {
   if (lastPage <= 1) return null;
 
-  const btn = 'grid size-10 place-items-center rounded-lg border text-sm font-semibold transition-colors';
+  const arrow =
+    'grid size-10 cursor-pointer place-items-center rounded-full bg-surface transition-colors hover:bg-surface-3 disabled:cursor-not-allowed disabled:opacity-40';
 
   return (
-    <nav aria-label="Pagination" className="flex items-center justify-between gap-4">
-      <p className="text-sm text-muted">
-        Page <span className="font-semibold text-ink">{page}</span> of{' '}
-        <span className="font-semibold text-ink">{lastPage}</span>
-      </p>
-      <div className="flex items-center gap-1.5">
-        <button
-          type="button"
-          onClick={() => onChange(page - 1)}
-          disabled={page <= 1}
-          aria-label="Previous page"
-          className={clsx(btn, 'cursor-pointer border-line hover:border-ink/40 disabled:cursor-not-allowed disabled:opacity-40')}
-        >
+    <nav aria-label="Pagination" className="flex flex-col items-center gap-3">
+      <div className="flex items-center gap-2">
+        <button type="button" onClick={() => onChange(page - 1)} disabled={page <= 1} aria-label="Previous page" className={arrow}>
           <ChevronLeft className="size-4" />
         </button>
         {pageList(page, lastPage).map((p, i) =>
           p === '…' ? (
-            <span key={`gap-${i}`} className="w-6 text-center text-muted">
+            <span key={`gap-${i}`} className="w-6 text-center text-sm text-muted">
               …
             </span>
           ) : (
@@ -55,25 +46,21 @@ export function Pagination({
               onClick={() => onChange(p)}
               aria-current={p === page ? 'page' : undefined}
               className={clsx(
-                btn,
-                'cursor-pointer',
-                p === page ? 'border-accent bg-accent text-white' : 'border-line hover:border-ink/40',
+                'grid size-10 cursor-pointer place-items-center rounded-full text-sm font-semibold transition-colors',
+                p === page ? 'bg-accent text-white' : 'text-ink hover:bg-surface',
               )}
             >
               {p}
             </button>
           ),
         )}
-        <button
-          type="button"
-          onClick={() => onChange(page + 1)}
-          disabled={page >= lastPage}
-          aria-label="Next page"
-          className={clsx(btn, 'cursor-pointer border-line hover:border-ink/40 disabled:cursor-not-allowed disabled:opacity-40')}
-        >
+        <button type="button" onClick={() => onChange(page + 1)} disabled={page >= lastPage} aria-label="Next page" className={arrow}>
           <ChevronRight className="size-4" />
         </button>
       </div>
+      <p className="text-xs text-muted">
+        Page {page} of {lastPage}
+      </p>
     </nav>
   );
 }
