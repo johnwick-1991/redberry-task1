@@ -33,15 +33,15 @@ export function Layout() {
   useFilterOptions();
 
   return (
-    <div className="flex min-h-screen flex-col">
+    <div className="relative flex min-h-screen flex-col">
       <Navbar />
       <main className="flex-1">
         <Outlet />
       </main>
-      <footer className="mt-20 border-t border-line">
-        <div className="mx-auto flex max-w-[1600px] items-center justify-between px-10 py-8 text-sm text-muted">
-          <Logo />
-          <p>© {new Date().getFullYear()} Kino XII · Tbilisi · Batumi</p>
+      <footer className="mt-20 px-[34px] pb-[34px] pt-[27px]">
+        <div className="flex items-center justify-between border-t border-surface-3 pt-5">
+          <Logo className="text-sm" />
+          <p className="text-xs text-muted">© {new Date().getFullYear()} Kino XII. All rights reserved.</p>
         </div>
       </footer>
 

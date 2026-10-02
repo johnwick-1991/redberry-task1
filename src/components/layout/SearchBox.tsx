@@ -4,7 +4,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useSearch } from '@/api/queries';
 import { formatPrice, formatRuntime } from '@/lib/format';
 import { AgeBadge } from '@/components/ui/States';
-import { FilmIcon, SearchIcon } from '@/components/ui/icons';
+import { FigmaIcon, FilmIcon } from '@/components/ui/icons';
 import { Spinner } from '@/components/ui/Spinner';
 
 function useDebounced<T>(value: T, delay: number): T {
@@ -49,15 +49,15 @@ export function SearchBox() {
     <Link
       to="/sessions"
       onClick={() => setOpen(false)}
-      className="mt-3 inline-flex rounded-full bg-surface-3 px-4 py-2 text-xs font-semibold hover:bg-line"
+      className="mt-3 inline-flex rounded-full bg-surface-3 px-4 py-2 text-xs font-extrabold hover:bg-disabled"
     >
       Browse all sessions
     </Link>
   );
 
   return (
-    <div ref={wrapRef} className="relative w-80">
-      <SearchIcon className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted" />
+    <div ref={wrapRef} className="relative w-[380px]">
+      <FigmaIcon name="search" className="pointer-events-none absolute left-3 top-1/2 size-3.5 -translate-y-1/2 text-ink" />
       <input
         type="search"
         value={term}
@@ -81,12 +81,12 @@ export function SearchBox() {
         }}
         placeholder="Search films and live events"
         aria-label="Search films"
-        className="h-10 w-full rounded-full border border-line bg-surface-2 pl-9 pr-9 text-sm outline-none transition-colors placeholder:text-muted focus:border-ink/40"
+        className="h-[41px] w-full rounded-full bg-tint-white pl-[30px] pr-9 text-sm text-ink outline-none transition-colors placeholder:text-ink focus:bg-white/15"
       />
       {isFetching && <Spinner className="absolute right-3 top-1/2 size-4 -translate-y-1/2 text-muted" />}
 
       {showPanel && (
-        <div className="absolute right-0 top-12 z-40 w-[26rem] animate-fade-in overflow-hidden rounded-xl border border-line bg-surface shadow-2xl">
+        <div className="absolute right-0 top-[49px] z-40 w-[480px] animate-fade-in overflow-hidden rounded-xl border border-surface-3 bg-bg shadow-2xl">
           {isError ? (
             <p className="px-4 py-3 text-sm text-bad">Search failed. Please try again.</p>
           ) : !query ? (
@@ -101,7 +101,7 @@ export function SearchBox() {
           ) : data.length === 0 && !isFetching ? (
             <div className="flex flex-col items-center px-6 py-6 text-center">
               <span className="grid size-10 place-items-center rounded-full bg-surface-3 text-muted">
-                <SearchIcon className="size-5" />
+                <FigmaIcon name="search" className="size-5" />
               </span>
               <p className="mt-3 text-sm font-semibold">No results for “{query}”</p>
               <p className="mt-1 text-xs text-muted">Check the spelling or try another film or live event.</p>
@@ -125,7 +125,7 @@ export function SearchBox() {
                         setTerm('');
                       }}
                       onMouseEnter={() => setActive(i)}
-                      className={clsx('flex items-center gap-3 px-3 py-2', i === active && 'bg-surface-3')}
+                      className={clsx('flex items-center gap-3 px-3 py-2', i === active && 'bg-tint-white')}
                     >
                       <div className="h-14 w-10 shrink-0 overflow-hidden rounded bg-surface-3">
                         {m.posterUrl && <img src={m.posterUrl} alt="" className="size-full object-cover" />}

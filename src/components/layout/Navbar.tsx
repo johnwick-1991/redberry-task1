@@ -7,23 +7,27 @@ import { useAuthStore } from '@/store/auth';
 import { useAuthModal } from '@/store/authModal';
 import { useBookingStore } from '@/store/booking';
 import { initials } from '@/lib/format';
-import { useRequireAuth } from '@/lib/guards';
 import { Button } from '@/components/ui/Button';
-import { CheckIcon, ChevronDown, LogoutIcon, TicketIcon, UserIcon } from '@/components/ui/icons';
+import { ChevronDown, FigmaIcon, LogoutIcon, UserIcon } from '@/components/ui/icons';
 import { SearchBox } from './SearchBox';
 
-export function Logo() {
+export function Logo({ className = 'text-xl' }: { className?: string }) {
   return (
-    <Link to="/" className="flex items-center gap-2.5" aria-label="Kino XII home">
-      <span className="grid size-9 place-items-center rounded-lg bg-accent text-white shadow-lg shadow-accent/30">
-        <svg viewBox="0 0 24 24" className="size-4" fill="currentColor" aria-hidden="true">
-          <path d="M8 5v14l11-7z" />
-        </svg>
-      </span>
-      <span className="text-lg font-extrabold tracking-tight">
-        KINO <span className="text-accent">XII</span>
-      </span>
+    <Link to="/" className={clsx('flex items-center gap-1.5 font-extrabold leading-none', className)} aria-label="Kino XII home">
+      <span className="text-ink">KINO</span>
+      <span className="text-accent">XII</span>
     </Link>
+  );
+}
+
+function Avatar({ size = 'size-9' }: { size?: string }) {
+  const user = useAuthStore((s) => s.user)!;
+  return user.avatar ? (
+    <img src={user.avatar} alt="" className={clsx(size, 'rounded-lg object-cover')} />
+  ) : (
+    <span className={clsx(size, 'grid place-items-center rounded-lg bg-surface-3 text-xs font-semibold')}>
+      {initials(user.fullName, user.username)}
+    </span>
   );
 }
 
@@ -73,6 +77,9 @@ function UserMenu() {
   const complete = user.profileComplete;
   const displayName = user.fullName || user.username;
 
+  const firstName = displayName.split(' ')[0];
+  const itemClass = 'flex w-full cursor-pointer items-center gap-2 px-4 py-2.5 text-left text-xs font-semibold hover:bg-tint-white';
+
   return (
     <div ref={ref} className="relative">
       <button
@@ -80,56 +87,44 @@ function UserMenu() {
         onClick={() => setOpen((o) => !o)}
         aria-haspopup="menu"
         aria-expanded={open}
-        className="flex cursor-pointer items-center gap-2.5 rounded-full py-1 pl-1 pr-3 transition-colors hover:bg-surface-3"
+        className="flex cursor-pointer items-center gap-3"
       >
         <span className="relative">
-          {user.avatar ? (
-            <img src={user.avatar} alt="" className="size-9 rounded-full object-cover" />
-          ) : (
-            <span className="grid size-9 place-items-center rounded-full bg-surface-3 text-sm font-bold">
-              {initials(user.fullName, user.username)}
-            </span>
-          )}
+          <Avatar />
           <span
             title={complete ? 'Profile complete' : 'Profile incomplete'}
             className={clsx(
-              'absolute -right-0.5 -top-0.5 size-3 rounded-full border-2 border-bg',
+              'absolute -bottom-0.5 -right-0.5 size-2.5 rounded-full border-2 border-bg',
               complete ? 'bg-ok' : 'bg-warn',
             )}
           />
         </span>
-        <span className="max-w-40 truncate text-sm font-semibold">{displayName}</span>
-        <ChevronDown className={clsx('size-4 text-muted transition-transform', open && 'rotate-180')} />
+        <span className="max-w-40 truncate text-xs font-semibold">{firstName}</span>
+        <ChevronDown className={clsx('size-4 text-ink transition-transform', open ? '' : 'rotate-180')} />
       </button>
 
       {open && (
         <div
           role="menu"
-          className="absolute right-0 top-13 z-40 w-72 animate-fade-in overflow-hidden rounded-xl border border-line bg-surface py-1.5 shadow-2xl"
+          className="absolute right-0 top-12 z-40 w-[302px] animate-fade-in overflow-hidden rounded-xl border border-surface-3 bg-bg py-2 shadow-2xl"
         >
           <div className="flex items-center gap-3 px-4 pb-3 pt-2">
-            {user.avatar ? (
-              <img src={user.avatar} alt="" className="size-10 rounded-full object-cover" />
-            ) : (
-              <span className="grid size-10 place-items-center rounded-full bg-surface-3 text-sm font-bold">
-                {initials(user.fullName, user.username)}
-              </span>
-            )}
+            <Avatar size="size-10" />
             <div className="min-w-0">
-              <p className="truncate text-sm font-bold">{displayName}</p>
+              <p className="truncate text-xs font-extrabold">{displayName}</p>
               <p className="truncate text-xs text-muted">{user.email}</p>
             </div>
           </div>
           <Link
             to="/profile"
             className={clsx(
-              'mx-3 mb-2 block rounded-lg border px-3 py-2 text-xs',
-              complete ? 'border-ok/30 bg-ok/10 text-ok' : 'border-warn/30 bg-warn/10',
+              'mx-4 mb-2 block rounded-lg px-3 py-2.5 text-xs',
+              complete ? 'bg-ok/10 text-ok' : 'bg-surface-3',
             )}
           >
             {complete ? (
               <span className="flex items-center gap-1.5 font-semibold">
-                Profile Complete <CheckIcon className="size-3.5" />
+                Profile Complete <FigmaIcon name="confirm" className="size-3" />
               </span>
             ) : (
               <>
@@ -138,31 +133,21 @@ function UserMenu() {
               </>
             )}
           </Link>
-          <div className="mb-1 border-t border-line" />
-          <Link
-            role="menuitem"
-            to="/profile"
-            className="flex items-center gap-2.5 px-4 py-2.5 text-sm hover:bg-surface-3"
-          >
-            <UserIcon className="size-4 text-muted" /> My Profile
-            {!complete && <span className="ml-auto size-2 rounded-full bg-warn" />}
+          <Link role="menuitem" to="/profile" className={itemClass}>
+            <UserIcon className="size-4" /> My Profile
           </Link>
-          <Link
-            role="menuitem"
-            to="/profile#tickets"
-            className="flex items-center gap-2.5 px-4 py-2.5 text-sm hover:bg-surface-3"
-          >
-            <TicketIcon className="size-4 text-muted" /> My Tickets
+          <Link role="menuitem" to="/profile#tickets" className={itemClass}>
+            <FigmaIcon name="ticket" className="size-4" /> My Tickets
           </Link>
-          <div className="my-1 border-t border-line" />
+          <div className="my-1 border-t border-surface-3" />
           <button
             role="menuitem"
             type="button"
             disabled={loggingOut}
             onClick={handleLogout}
-            className="flex w-full cursor-pointer items-center gap-2.5 px-4 py-2.5 text-left text-sm hover:bg-surface-3 disabled:opacity-50"
+            className={clsx(itemClass, 'text-accent disabled:opacity-50')}
           >
-            <LogoutIcon className="size-4 text-muted" /> {loggingOut ? 'Logging out…' : 'Logout'}
+            <LogoutIcon className="size-4" /> {loggingOut ? 'Logging out…' : 'Log out'}
           </button>
         </div>
       )}
@@ -170,49 +155,40 @@ function UserMenu() {
   );
 }
 
+/** Sits over the page (and over the hero on Home and film pages), as in the design. */
 export function Navbar() {
   const { token, user, ready } = useAuthStore();
   const openLogin = useAuthModal((s) => s.openLogin);
   const openRegister = useAuthModal((s) => s.openRegister);
-  const requireAuth = useRequireAuth();
-  const navigate = useNavigate();
   const authed = token !== null && user !== null;
 
-  const linkClass = ({ isActive }: { isActive: boolean }) =>
-    clsx(
-      'rounded-lg px-3 py-2 text-sm font-semibold transition-colors',
-      isActive ? 'text-ink' : 'text-muted hover:text-ink',
-    );
-
   return (
-    <header className="sticky top-0 z-30 border-b border-line/70 bg-bg/85 backdrop-blur-md">
-      <div className="mx-auto flex h-18 max-w-[1600px] items-center gap-8 px-10">
-        <Logo />
-        <nav className="flex items-center gap-1">
-          <NavLink to="/sessions" className={linkClass}>
+    <header className="absolute inset-x-0 top-0 z-30 bg-[url(/figma/navbar-bg.png)] bg-cover bg-top">
+      <div className="flex items-center justify-between px-[60px] pb-10 pt-[30px]">
+        <div className="flex items-center gap-9">
+          <Logo />
+          <NavLink
+            to="/sessions"
+            className={({ isActive }) =>
+              clsx('text-xs font-semibold uppercase tracking-[0.72px] transition-colors', isActive ? 'text-ink' : 'text-ink/80 hover:text-ink')
+            }
+          >
             Sessions
           </NavLink>
-          <button
-            type="button"
-            className="cursor-pointer rounded-lg px-3 py-2 text-sm font-semibold text-muted transition-colors hover:text-ink"
-            onClick={() => requireAuth(() => navigate('/profile#tickets'))}
-          >
-            My Tickets
-          </button>
-        </nav>
+        </div>
 
-        <div className="ml-auto flex items-center gap-4">
+        <div className="flex items-center gap-8">
           <SearchBox />
           {!ready ? (
-            <div className="h-10 w-40 animate-pulse rounded-full bg-surface-3" />
+            <div className="h-10 w-44 animate-pulse rounded-full bg-tint-white" />
           ) : authed ? (
             <UserMenu />
           ) : (
-            <div className="flex items-center gap-2">
-              <Button variant="ghost" onClick={() => openLogin()}>
+            <div className="flex items-center gap-3">
+              <Button onClick={openRegister}>Sign up</Button>
+              <Button variant="light" onClick={() => openLogin()}>
                 Log in
               </Button>
-              <Button onClick={openRegister}>Sign up</Button>
             </div>
           )}
         </div>

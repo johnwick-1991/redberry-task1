@@ -7,7 +7,7 @@ const MAX = 10;
 export type RecentMovie = Pick<
   Movie,
   'id' | 'slug' | 'title' | 'posterUrl' | 'runtimeMinutes' | 'ageRating' | 'isComingSoon'
->;
+> & { genre?: string };
 
 export function getRecentlyViewed(): RecentMovie[] {
   try {
@@ -28,6 +28,7 @@ export function addRecentlyViewed(movie: Movie): void {
     runtimeMinutes: movie.runtimeMinutes,
     ageRating: movie.ageRating,
     isComingSoon: movie.isComingSoon,
+    genre: movie.genres[0]?.name,
   };
   try {
     const next = [entry, ...getRecentlyViewed().filter((m) => m.id !== movie.id)].slice(0, MAX);

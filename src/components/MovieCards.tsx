@@ -4,12 +4,12 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import type { Movie } from '@/api/types';
 import { notifyMe } from '@/api/endpoints';
 import { errorMessage } from '@/api/errors';
-import { formatDate, formatPrice, formatRuntime } from '@/lib/format';
+import { formatDayMonth, formatPrice, formatRuntime } from '@/lib/format';
 import { useRequireAuth } from '@/lib/guards';
 import { toast } from '@/store/toast';
-import { Button, buttonClasses } from '@/components/ui/Button';
+import { buttonClasses } from '@/components/ui/Button';
 import { AgeBadge } from '@/components/ui/States';
-import { BellIcon, CheckIcon, FilmIcon } from '@/components/ui/icons';
+import { FigmaIcon, FilmIcon } from '@/components/ui/icons';
 
 export function Poster({ src, title, className }: { src: string | null; title: string; className?: string }) {
   return (
@@ -25,30 +25,33 @@ export function Poster({ src, title, className }: { src: string | null; title: s
   );
 }
 
-/** Now Playing: large card with poster, rating, runtime, starting price and Buy Ticket. */
+function genreLine(movie: Movie) {
+  const genre = movie.genres[0]?.name;
+  return [genre, formatRuntime(movie.runtimeMinutes)].filter(Boolean).join(' · ');
+}
+
+/** Now Playing ("Card_big"): poster, title, genre · runtime, rating, from price and Buy Ticket. */
 export function NowPlayingCard({ movie }: { movie: Movie }) {
   return (
-    <article className="group flex w-64 shrink-0 flex-col overflow-hidden rounded-2xl border border-line bg-surface transition-all hover:-translate-y-1 hover:border-ink/25 hover:shadow-2xl">
-      <Link to={`/movies/${movie.slug}`} className="relative block">
-        <Poster src={movie.posterUrl} title={movie.title} className="aspect-[2/3] w-full transition-transform duration-500 group-hover:scale-[1.03]" />
-        <AgeBadge rating={movie.ageRating} className="absolute left-3 top-3 shadow-lg backdrop-blur" />
+    <article className="group flex h-[452px] w-[260px] shrink-0 flex-col gap-2.5 rounded-[20px] bg-surface p-3 shadow-[0_1px_2px_rgb(0_0_0/0.2)]">
+      <Link to={`/movies/${movie.slug}`} className="relative block h-[300px] shrink-0 overflow-hidden rounded-[14px]">
+        <Poster src={movie.posterUrl} title={movie.title} className="size-full transition-transform duration-500 group-hover:scale-[1.03]" />
         {movie.kind !== 'film' && (
-          <span className="absolute right-3 top-3 rounded-md bg-accent px-2 py-0.5 text-[10px] font-bold uppercase">
+          <span className="absolute right-2 top-2 rounded-full bg-accent px-2 py-1 text-[10px] font-semibold uppercase">
             Event
           </span>
         )}
       </Link>
-      <div className="flex flex-1 flex-col gap-2 p-4">
-        <Link to={`/movies/${movie.slug}`} className="line-clamp-1 text-base font-bold hover:text-accent">
+      <div className="flex flex-1 flex-col gap-[7px]">
+        <Link to={`/movies/${movie.slug}`} className="line-clamp-1 text-lg font-extrabold leading-tight hover:text-accent">
           {movie.title}
         </Link>
-        <div className="flex items-center justify-between text-sm text-muted">
-          <span>{formatRuntime(movie.runtimeMinutes)}</span>
-          {movie.fromPrice !== null && (
-            <span className="font-semibold text-ink">from {formatPrice(movie.fromPrice)}</span>
-          )}
-        </div>
-        <Link to={`/movies/${movie.slug}`} className={buttonClasses('primary', 'md', 'mt-auto w-full')}>
+        <p className="text-xs text-muted">{genreLine(movie)}</p>
+        <AgeBadge rating={movie.ageRating} className="self-start px-[7px]" />
+      </div>
+      <div className="flex items-center justify-between">
+        <span className="text-xs font-semibold">{movie.fromPrice !== null && `From ${formatPrice(movie.fromPrice)}`}</span>
+        <Link to={`/movies/${movie.slug}`} className={buttonClasses('primary', 'sm')}>
           Buy Ticket
         </Link>
       </div>
@@ -56,7 +59,7 @@ export function NowPlayingCard({ movie }: { movie: Movie }) {
   );
 }
 
-/** Coming Soon: no sessions, so the action is Notify Me rather than booking. */
+/** Coming Soon ("Card_medium"): no sessions, so the action is Notify Me rather than booking. */
 export function ComingSoonCard({ movie }: { movie: Movie }) {
   const requireAuth = useRequireAuth();
   const queryClient = useQueryClient();
@@ -69,39 +72,37 @@ export function ComingSoonCard({ movie }: { movie: Movie }) {
     onError: (error) => toast(errorMessage(error), 'error'),
   });
 
+  const notifyClass =
+    'inline-flex cursor-pointer items-center gap-1 rounded-full border border-muted px-3 py-1.5 text-xs font-semibold transition-colors hover:bg-tint-white disabled:cursor-default disabled:opacity-60';
+
   return (
-    <article className="flex w-56 shrink-0 flex-col overflow-hidden rounded-2xl border border-line bg-surface">
-      <Link to={`/movies/${movie.slug}`} className="relative block">
-        <Poster src={movie.posterUrl} title={movie.title} className="aspect-[2/3] w-full" />
-        <span className="absolute bottom-3 left-3 rounded-md bg-black/70 px-2 py-1 text-xs font-semibold backdrop-blur">
-          {formatDate(movie.releaseDate)}
-        </span>
+    <article className="flex h-40 w-[470px] shrink-0 items-center gap-[15px] rounded-[20px] bg-surface p-3 shadow-[0_1px_2px_rgb(0_0_0/0.2)]">
+      <Link to={`/movies/${movie.slug}`} className="block h-full flex-1 overflow-hidden rounded-[14px]">
+        <Poster src={movie.backdropUrl ?? movie.posterUrl} title={movie.title} className="size-full" />
       </Link>
-      <div className="flex flex-1 flex-col gap-2 p-4">
-        <Link to={`/movies/${movie.slug}`} className="line-clamp-1 font-bold hover:text-accent">
-          {movie.title}
-        </Link>
-        <div className="flex items-center gap-2 text-sm text-muted">
-          <AgeBadge rating={movie.ageRating} />
-          <span>{formatRuntime(movie.runtimeMinutes)}</span>
+      <div className="flex h-[132px] w-[200px] shrink-0 flex-col items-start justify-between">
+        <div className="flex flex-col items-start gap-[7px]">
+          <p className="text-xs font-semibold uppercase text-accent">In cinemas {formatDayMonth(movie.releaseDate)}</p>
+          <Link to={`/movies/${movie.slug}`} className="line-clamp-1 text-xs font-semibold hover:text-accent">
+            {movie.title}
+          </Link>
+          <p className="text-xs text-muted">{genreLine(movie)}</p>
+          <AgeBadge rating={movie.ageRating} className="px-[7px]" />
         </div>
-        <div className="mt-auto pt-1">
-          {movie.isNotified ? (
-            <Button variant="secondary" disabled className="w-full" icon={<CheckIcon className="size-4" />}>
-              You&apos;ll be notified
-            </Button>
-          ) : (
-            <Button
-              variant="secondary"
-              className="w-full"
-              loading={mutation.isPending}
-              icon={<BellIcon className="size-4" />}
-              onClick={() => requireAuth(() => !mutation.isPending && mutation.mutate())}
-            >
-              Notify Me
-            </Button>
-          )}
-        </div>
+        {movie.isNotified ? (
+          <button type="button" disabled className={notifyClass}>
+            <FigmaIcon name="confirm" className="size-3" /> You&apos;ll be notified
+          </button>
+        ) : (
+          <button
+            type="button"
+            disabled={mutation.isPending}
+            className={notifyClass}
+            onClick={() => requireAuth(() => !mutation.isPending && mutation.mutate())}
+          >
+            <FigmaIcon name="bell" className="size-4" /> Notify Me
+          </button>
+        )}
       </div>
     </article>
   );
