@@ -61,7 +61,7 @@ function SessionHeader({ session, seconds, showTimer }: { session: Session; seco
     <div className="flex items-start gap-4 pr-12">
       <div className="flex min-w-0 flex-1 flex-col gap-2">
         <div className="flex items-center gap-3">
-          <h2 className="truncate text-xl font-extrabold uppercase leading-none">{movie?.title ?? 'Booking'}</h2>
+          <h2 className="truncate text-xl font-extrabold uppercase">{movie?.title ?? 'Booking'}</h2>
           {movie && <AgeBadge rating={movie.ageRating} />}
         </div>
         <p className="text-xs text-muted">
@@ -382,7 +382,7 @@ function BookingFlow({ sessionId }: { sessionId: number }) {
 
         <aside className="flex min-w-0 flex-col gap-3">
           <div className="flex max-h-[351px] flex-col gap-3 overflow-y-auto">
-            <h3 className="text-sm font-extrabold leading-none">Your seats · Max {maxSeats}</h3>
+            <h3 className="text-sm font-extrabold">Your seats · Max {maxSeats}</h3>
 
             {notice && <FormAlert tone={notice.tone}>{notice.text}</FormAlert>}
 
@@ -456,7 +456,7 @@ function BookingFlow({ sessionId }: { sessionId: number }) {
           <div className="mt-auto flex flex-col gap-3 pt-2.5">
             <div className="flex items-center justify-between px-[5px]">
               <span className="text-xs font-semibold">SUBTOTAL</span>
-              <span className="text-2xl font-extrabold leading-none">{formatPrice(subtotal)}</span>
+              <span className="text-2xl font-extrabold">{formatPrice(subtotal)}</span>
             </div>
             {blockers.length > 0 && selection.length > 0 && (
               <p className="px-[5px] text-xs text-warn">{blockers[0]}</p>

@@ -68,7 +68,7 @@ export function ProfilePage() {
   return (
     <div className="flex flex-col gap-9 px-[51px] pt-[117px]">
       <div className="flex flex-col gap-7 border-b border-surface">
-        <h1 className="text-2xl font-extrabold leading-none">My Profile</h1>
+        <h1 className="text-2xl font-extrabold">My Profile</h1>
         <div role="tablist" className="flex gap-8">
           <Tab active={tab === 'info'} onClick={() => navigate({ hash: '' }, { replace: true })}>
             Personal Information
@@ -77,7 +77,7 @@ export function ProfilePage() {
           <Tab active={tab === 'tickets'} onClick={() => navigate({ hash: 'tickets' }, { replace: true })}>
             My Tickets
             {!!upcoming.data?.length && (
-              <span className="rounded-full bg-accent px-1.5 py-0.5 text-xs leading-none text-white">{upcoming.data.length}</span>
+              <span className="rounded-full bg-accent px-1.5 py-0.5 text-xs text-white">{upcoming.data.length}</span>
             )}
           </Tab>
         </div>

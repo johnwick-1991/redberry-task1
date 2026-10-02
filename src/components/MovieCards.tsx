@@ -43,7 +43,7 @@ export function NowPlayingCard({ movie }: { movie: Movie }) {
         )}
       </Link>
       <div className="flex flex-1 flex-col gap-[7px]">
-        <Link to={`/movies/${movie.slug}`} className="line-clamp-1 text-lg font-extrabold leading-tight hover:text-accent">
+        <Link to={`/movies/${movie.slug}`} className="line-clamp-1 text-lg font-extrabold hover:text-accent">
           {movie.title}
         </Link>
         <p className="text-xs text-muted">{genreLine(movie)}</p>

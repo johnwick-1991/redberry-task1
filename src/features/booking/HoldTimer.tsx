@@ -44,7 +44,7 @@ export function HoldTimer({ seconds }: { seconds: number }) {
       aria-live={urgent ? 'assertive' : 'off'}
       aria-label={`Seats held for ${formatCountdown(seconds)}`}
       className={clsx(
-        'flex shrink-0 flex-col items-center gap-0.5 rounded-xl px-3.5 py-2 leading-none',
+        'flex shrink-0 flex-col items-center gap-0.5 rounded-xl px-3.5 py-2',
         urgent ? 'animate-pulse bg-tint-red' : 'bg-surface',
       )}
     >

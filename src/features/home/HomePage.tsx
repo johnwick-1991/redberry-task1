@@ -62,12 +62,12 @@ function Hero() {
       <div className="absolute inset-x-0 bottom-0 h-40 bg-gradient-to-t from-bg to-transparent" />
 
       <div key={`text-${movie.id}`} className="absolute bottom-[179px] left-[67px] flex w-[580px] animate-hero-in flex-col items-start gap-[15px]">
-        <span className="rounded-full bg-tint-red px-2.5 py-1.5 text-xs font-semibold uppercase leading-none text-accent">
+        <span className="rounded-full bg-tint-red px-2.5 py-1.5 text-xs font-semibold uppercase text-accent">
           {movie.isComingSoon ? `Coming · ${formatDayMonth(movie.releaseDate)}` : `Premiere · ${formatDayMonth(movie.releaseDate)}`}
         </span>
         <div className="flex w-full flex-col gap-5">
           <div className="flex flex-col gap-[15px]">
-            <h1 className="text-[40px] font-extrabold uppercase leading-none">{movie.title}</h1>
+            <h1 className="text-[40px] font-extrabold uppercase">{movie.title}</h1>
             <div className="flex flex-wrap gap-2">
               <AgeBadge rating={movie.ageRating} className="px-3 py-1.5" />
               <Chip>
@@ -147,7 +147,7 @@ function Rail({ title, action, children }: { title: string; action?: ReactNode; 
   return (
     <section className="flex flex-col gap-6 px-[70px]">
       <div className="flex items-end justify-between">
-        <h2 className="text-2xl font-extrabold uppercase leading-none">{title}</h2>
+        <h2 className="text-2xl font-extrabold uppercase">{title}</h2>
         {action}
       </div>
       <div className="relative">
@@ -184,7 +184,7 @@ function RecentlyViewed() {
 
   return (
     <section className="flex flex-col gap-4 px-[70px]">
-      <h2 className="text-lg font-extrabold leading-none">Recently viewed</h2>
+      <h2 className="text-lg font-extrabold">Recently viewed</h2>
       <div className="rail flex gap-3 overflow-x-auto">
         {items.map((m) => (
           <Link

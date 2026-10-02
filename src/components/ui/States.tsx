@@ -71,7 +71,7 @@ export function AgeBadge({ rating, className }: { rating: AgeRating; className?:
     <span
       title={rating.description}
       className={clsx(
-        'inline-flex items-center rounded-full bg-tint-red px-2 py-1 text-xs font-semibold leading-none text-accent',
+        'inline-flex items-center rounded-full bg-tint-red px-2 py-1 text-xs font-semibold text-accent',
         className,
       )}
     >
@@ -93,7 +93,7 @@ export function Chip({
   return (
     <span
       className={clsx(
-        'inline-flex items-center gap-1 rounded-full text-xs font-semibold leading-none text-ink',
+        'inline-flex items-center gap-1 rounded-full text-xs font-semibold text-ink',
         tone === 'raised' ? 'bg-surface-3 px-2.5 py-[5px]' : 'bg-tint-white px-3 py-1.5',
         className,
       )}

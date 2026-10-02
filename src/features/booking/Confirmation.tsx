@@ -32,7 +32,7 @@ export function Confirmation({
             <FigmaIcon name="confirm" className="size-8 text-white" />
           </div>
           <div className="flex flex-col gap-2.5">
-            <h3 className="text-2xl font-extrabold leading-none">Booking confirmed!</h3>
+            <h3 className="text-2xl font-extrabold">Booking confirmed!</h3>
             <p className="text-sm leading-[1.3] text-muted">Your tickets are ready. We&apos;ve sent the confirmation to your email.</p>
           </div>
           <span className="rounded-full bg-surface-3 px-5 py-1.5 text-xs font-semibold">ORDER #{order.reference}</span>
@@ -42,7 +42,7 @@ export function Confirmation({
           <div className="flex gap-2.5">
             {movie && <Poster src={movie.posterUrl} title={movie.title} className="h-16 w-12 shrink-0 rounded-lg" />}
             <div className="flex min-w-0 flex-col gap-2">
-              <p className="text-sm font-extrabold uppercase leading-none">{movie?.title}</p>
+              <p className="text-sm font-extrabold uppercase">{movie?.title}</p>
               <p className="text-xs text-muted">
                 {venue.name} · Hall {session.hall.name} · {formatShortDate(session.date)} · {session.time}
               </p>
@@ -60,7 +60,7 @@ export function Confirmation({
           <div className="h-px bg-surface-3" />
           <div className="flex items-center justify-between">
             <span className="text-xs text-muted">TOTAL PAID</span>
-            <span className="text-lg font-extrabold leading-none">{formatPrice(order.totalPrice)}</span>
+            <span className="text-lg font-extrabold">{formatPrice(order.totalPrice)}</span>
           </div>
         </div>
       </div>

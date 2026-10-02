@@ -4,7 +4,7 @@ export type BookingStep = 'seats' | 'checkout' | 'done';
 
 /** "SEATS | CHECKOUT" progress tabs. Going back to Seats keeps the hold. */
 export function StepTabs({ step, onSeats }: { step: BookingStep; onSeats?: () => void }) {
-  const tab = 'flex flex-1 items-center justify-center rounded-full px-4 py-2.5 text-xs font-semibold leading-none';
+  const tab = 'flex flex-1 items-center justify-center rounded-full px-4 py-2.5 text-xs font-semibold';
   return (
     <div className="flex w-full gap-2 rounded-full bg-surface" role="list" aria-label="Booking steps">
       {step === 'seats' ? (

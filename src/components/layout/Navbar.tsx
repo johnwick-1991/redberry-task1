@@ -13,7 +13,7 @@ import { SearchBox } from './SearchBox';
 
 export function Logo({ className = 'text-xl' }: { className?: string }) {
   return (
-    <Link to="/" className={clsx('flex items-center gap-1.5 font-extrabold leading-none', className)} aria-label="Kino XII home">
+    <Link to="/" className={clsx('flex items-center gap-1.5 font-extrabold', className)} aria-label="Kino XII home">
       <span className="text-ink">KINO</span>
       <span className="text-accent">XII</span>
     </Link>

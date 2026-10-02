@@ -109,7 +109,7 @@ function SessionsSection({ movie }: { movie: MovieDetail }) {
     <section id="sessions" className="flex min-w-0 flex-1 scroll-mt-6 flex-col gap-[27px] pb-[26px]">
       <div className="flex flex-col gap-3.5">
         <div className="flex flex-col gap-[7px]">
-          <h2 className="text-xl font-extrabold leading-none">Sessions</h2>
+          <h2 className="text-xl font-extrabold">Sessions</h2>
           <p className="text-xs text-muted">
             {sessions.isPending ? '\u00a0' : `${total} ${total === 1 ? 'session' : 'sessions'} on ${formatLongDate(date)}`}
           </p>
@@ -148,11 +148,11 @@ function SessionsSection({ movie }: { movie: MovieDetail }) {
       ) : (
         groups.map((group) => (
           <div key={group.venue.id} className="flex flex-col gap-3">
-            <h3 className="text-sm font-extrabold leading-none">{group.venue.name}</h3>
+            <h3 className="text-sm font-extrabold">{group.venue.name}</h3>
             <div className="flex flex-wrap gap-2.5">
               {byHall(group.sessions).map(([hall, list]) => (
                 <div key={hall} className="flex flex-col gap-[9px] rounded-[18px] bg-surface p-[15px]">
-                  <p className="text-xs font-semibold leading-none">Hall {hall}</p>
+                  <p className="text-xs font-semibold">Hall {hall}</p>
                   <div className="flex flex-wrap gap-[9px]">
                     {list.map((s) => (
                       <SessionTicket key={s.id} session={s} blocked={blocked} onSelect={() => startBooking(s.id, movie.ageRating)} />
@@ -178,7 +178,7 @@ function byHall(sessions: Session[]): [string, Session[]][] {
 function Details({ movie }: { movie: MovieDetail }) {
   return (
     <aside className="flex w-[441px] shrink-0 flex-col gap-[17px] px-[26px]">
-      <h2 className="text-xl font-extrabold leading-none">Details</h2>
+      <h2 className="text-xl font-extrabold">Details</h2>
       <Fact label="Director">{movie.director || '—'}</Fact>
       <Fact label="Main cast">{movie.cast || '—'}</Fact>
       <Fact label="Genre">{movie.genres.map((g) => g.name).join(', ') || '—'}</Fact>
@@ -254,12 +254,12 @@ export function MoviePage() {
             className="h-[374px] w-[289px] shrink-0 rounded-[14px] shadow-[0_4px_64px_rgb(0_0_0/0.2)]"
           />
           <div className="flex w-[580px] animate-hero-in flex-col items-start gap-[15px] py-[9px]">
-            <span className="rounded-full bg-tint-red px-2.5 py-1.5 text-xs font-semibold uppercase leading-none text-accent">
+            <span className="rounded-full bg-tint-red px-2.5 py-1.5 text-xs font-semibold uppercase text-accent">
               {movie.isComingSoon ? `Coming ${formatDayMonth(movie.releaseDate)}` : 'Now playing'}
             </span>
             <div className="flex flex-col gap-5">
               <div className="flex flex-col gap-[15px]">
-                <h1 className="text-[40px] font-extrabold uppercase leading-none">{movie.title}</h1>
+                <h1 className="text-[40px] font-extrabold uppercase">{movie.title}</h1>
                 {movie.synopsis && <p className="w-[560px] text-sm leading-[1.3]">{movie.synopsis}</p>}
               </div>
               <div className="flex flex-wrap gap-[7px]">

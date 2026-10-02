@@ -10,7 +10,7 @@ function Section({ title, children }: { title: string; children: ReactNode }) {
   return (
     <div role="group" aria-label={title} className="flex flex-col gap-6">
       <div className="flex flex-col gap-3">
-        <p className="text-xs font-semibold uppercase leading-none tracking-[0.72px] text-muted">{title}</p>
+        <p className="text-xs font-semibold uppercase tracking-[0.72px] text-muted">{title}</p>
         {children}
       </div>
       <div className="h-px bg-surface-3" />
@@ -40,7 +40,7 @@ function Check({
       >
         {checked && <FigmaIcon name="confirm" className="size-3" />}
       </span>
-      <span className="text-sm font-semibold leading-none">{label}</span>
+      <span className="text-sm font-semibold">{label}</span>
       {sub && <span className="text-xs text-muted">· {sub}</span>}
     </label>
   );
@@ -79,7 +79,7 @@ export function FiltersSidebar({ options, state, selectedFormats, activeCount, o
 
   return (
     <aside className={clsx(shell, 'max-h-[calc(100vh-3rem)] gap-6 overflow-y-auto')} aria-label="Filters">
-      <h2 className="text-lg font-extrabold leading-none">Filters</h2>
+      <h2 className="text-lg font-extrabold">Filters</h2>
       <Section title="Venue">
         {options.venues.map((v) => (
           <Check

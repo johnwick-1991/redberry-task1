@@ -58,8 +58,8 @@ export function SessionButton({ session, onSelect, blocked = false }: SessionBut
       )}
     >
       <div className="flex w-full items-center justify-between">
-        <span className="text-lg font-extrabold leading-none">{session.time}</span>
-        <span className="rounded-full bg-surface-3 px-2.5 py-[5px] text-xs font-semibold leading-none">{session.format.name}</span>
+        <span className="text-lg font-extrabold">{session.time}</span>
+        <span className="rounded-full bg-surface-3 px-2.5 py-[5px] text-xs font-semibold">{session.format.name}</span>
       </div>
       <div className="flex w-full items-start gap-2">
         <div className="flex min-w-0 flex-1 flex-col gap-2.5 text-xs">
@@ -70,7 +70,7 @@ export function SessionButton({ session, onSelect, blocked = false }: SessionBut
         </div>
         <div className="flex flex-col items-end gap-2.5">
           <SeatsLeft session={session} tone="status" />
-          <span className="text-sm font-extrabold leading-none">{formatPrice(session.price)}</span>
+          <span className="text-sm font-extrabold">{formatPrice(session.price)}</span>
         </div>
       </div>
     </button>
@@ -93,19 +93,19 @@ export function SessionTicket({ session, onSelect, blocked = false }: SessionBut
     >
       <img src="/figma/ticket-body.svg" alt="" className="absolute inset-0 size-full" />
       <span className="relative flex w-[124px] flex-col items-center gap-1.5 py-2">
-        <span className="text-xl font-extrabold leading-none">{session.time}</span>
+        <span className="text-xl font-extrabold">{session.time}</span>
         <span className="flex flex-col items-center gap-1">
-          <span className="text-[11px] leading-none text-muted" title={session.language.name}>
+          <span className="text-[11px] text-muted" title={session.language.name}>
             {languageCode(session.language)}
           </span>
-          <span className="rounded-full bg-surface px-2.5 py-1 text-[11px] font-semibold leading-none text-[#e3e3e3]/70">
+          <span className="rounded-full bg-surface px-2.5 py-1 text-[11px] font-semibold text-[#e3e3e3]/70">
             {session.format.name}
           </span>
         </span>
       </span>
       <span className="absolute left-[124px] top-[11px] h-[59px] border-l-[1.5px] border-dashed border-ink" />
       <span className="relative flex w-[83px] flex-col items-center gap-2 py-2.5">
-        <span className="text-lg font-extrabold leading-none text-accent group-disabled:text-muted">
+        <span className="text-lg font-extrabold text-accent group-disabled:text-muted">
           {formatPrice(session.price)}
         </span>
         <SeatsLeft session={session} tone="muted" />

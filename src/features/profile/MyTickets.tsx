@@ -70,7 +70,7 @@ function RefundDialog({ order, onClose }: { order: Order; onClose: () => void })
 
 function Meta({ label, children }: { label: string; children: ReactNode }) {
   return (
-    <div className="flex flex-col gap-1 font-semibold leading-none">
+    <div className="flex flex-col gap-1 font-semibold">
       <span className="text-xs uppercase tracking-[0.72px] text-muted">{label}</span>
       <span className="text-sm">{children}</span>
     </div>
@@ -97,11 +97,11 @@ function TicketCard({ order, onRefund }: { order: Order; onRefund?: () => void }
         <div className="flex min-w-0 flex-1 flex-col gap-3">
           <div className="flex items-center gap-2.5">
             {movie ? (
-              <Link to={`/movies/${movie.slug}`} className="truncate text-xl font-extrabold uppercase leading-none hover:text-accent">
+              <Link to={`/movies/${movie.slug}`} className="truncate text-xl font-extrabold uppercase hover:text-accent">
                 {movie.title}
               </Link>
             ) : (
-              <span className="text-xl font-extrabold leading-none">Order {order.reference}</span>
+              <span className="text-xl font-extrabold">Order {order.reference}</span>
             )}
             {movie && <AgeBadge rating={movie.ageRating} className="py-[3px]" />}
             {movie && <span className="text-sm text-muted">{formatRuntime(movie.runtimeMinutes)}</span>}
@@ -140,7 +140,7 @@ function TicketCard({ order, onRefund }: { order: Order; onRefund?: () => void }
         <div className="flex flex-col gap-2.5">
           <div className="flex items-baseline justify-between">
             <span className="text-sm font-semibold text-muted">{refunded ? 'Refunded' : 'Total paid'}</span>
-            <span className={clsx('text-2xl font-extrabold leading-none', refunded && 'text-muted line-through')}>
+            <span className={clsx('text-2xl font-extrabold', refunded && 'text-muted line-through')}>
               {formatPrice(order.totalPrice)}
             </span>
           </div>

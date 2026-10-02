@@ -30,7 +30,7 @@ const sizes: Record<Size, string> = {
 /** Same look as Button, for router links that should read as buttons. */
 export function buttonClasses(variant: Variant = 'primary', size: Size = 'md', className?: string) {
   return clsx(
-    'inline-flex cursor-pointer items-center justify-center gap-1 rounded-full font-extrabold leading-none whitespace-nowrap transition-colors',
+    'inline-flex cursor-pointer items-center justify-center gap-1 rounded-full font-extrabold whitespace-nowrap transition-colors',
     'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent',
     variants[variant],
     sizes[size],
@@ -55,7 +55,7 @@ export function Button({
       disabled={disabled || loading}
       aria-busy={loading || undefined}
       className={clsx(
-        'inline-flex cursor-pointer items-center justify-center gap-1 rounded-full font-extrabold leading-none whitespace-nowrap transition-colors',
+        'inline-flex cursor-pointer items-center justify-center gap-1 rounded-full font-extrabold whitespace-nowrap transition-colors',
         'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent',
         'disabled:cursor-not-allowed',
         variants[variant],

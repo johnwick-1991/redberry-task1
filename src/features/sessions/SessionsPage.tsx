@@ -29,7 +29,7 @@ function MovieGroup({ group }: { group: SessionGroup }) {
         </Link>
         <div className="flex flex-col gap-3">
           <div className="flex items-center gap-3">
-            <Link to={`/movies/${movie.slug}`} className="text-lg font-extrabold leading-none hover:text-accent">
+            <Link to={`/movies/${movie.slug}`} className="text-lg font-extrabold hover:text-accent">
               {movie.title}
             </Link>
             <AgeBadge rating={movie.ageRating} />
@@ -103,7 +103,7 @@ export function SessionsPage() {
   return (
     <div className="px-[51px] pt-[117px]">
       <div className="mb-9 flex flex-col gap-1.5">
-        <h1 className="text-2xl font-extrabold leading-none">Sessions</h1>
+        <h1 className="text-2xl font-extrabold">Sessions</h1>
         <p className="text-sm text-muted">Browse showtimes across all venues</p>
       </div>
 

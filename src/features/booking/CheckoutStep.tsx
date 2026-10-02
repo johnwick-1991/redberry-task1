@@ -193,10 +193,10 @@ export function CheckoutStep({
       <div className="bg-surface" />
 
       <aside className="flex min-w-0 flex-col gap-3">
-        <h3 className="text-sm font-extrabold leading-none">Summary</h3>
+        <h3 className="text-sm font-extrabold">Summary</h3>
         <div className="flex flex-col gap-2.5 rounded-xl bg-surface p-4">
           <div className="flex flex-col gap-2">
-            <p className="text-sm font-extrabold uppercase leading-none">{session.movie?.title}</p>
+            <p className="text-sm font-extrabold uppercase">{session.movie?.title}</p>
             <p className="text-xs text-muted">
               Hall {session.hall.name} · {formatShortDate(session.date)} · {session.time}
             </p>
@@ -215,7 +215,7 @@ export function CheckoutStep({
         <div className="mt-auto flex flex-col gap-3 pt-2.5">
           <div className="flex items-center justify-between px-[5px]">
             <span className="text-xs font-semibold">SUBTOTAL</span>
-            <span className="text-2xl font-extrabold leading-none">{formatPrice(hold.subtotal)}</span>
+            <span className="text-2xl font-extrabold">{formatPrice(hold.subtotal)}</span>
           </div>
           <Button type="submit" loading={mutation.isPending} className="w-full">
             {mutation.isPending ? 'Processing payment…' : 'Pay: Complete order'}

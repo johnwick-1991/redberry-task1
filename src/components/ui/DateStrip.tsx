@@ -35,7 +35,7 @@ export function DateStrip({
             title={disabled ? 'No sessions on this day' : undefined}
             onClick={() => onChange(iso)}
             className={clsx(
-              'flex shrink-0 flex-col items-center justify-center gap-1.5 leading-none transition-colors',
+              'flex shrink-0 flex-col items-center justify-center gap-1.5 transition-colors',
               compact
                 ? 'h-[54px] min-w-0 flex-1 rounded-lg text-xs font-semibold shadow-[0_1px_2px_rgb(0_0_0/0.2)]'
                 : 'size-20 rounded-2xl',
