@@ -151,10 +151,10 @@ function Rail({ title, action, children }: { title: string; action?: ReactNode; 
         {action}
       </div>
       <div className="relative">
-        <div className="rail flex gap-[17px] overflow-x-auto scroll-smooth">
+        <div className="rail -mr-[70px] flex gap-[17px] overflow-x-auto scroll-smooth pr-[70px]">
           {children}
         </div>
-        <div className="pointer-events-none absolute inset-y-0 -right-[70px] w-40 bg-gradient-to-l from-bg to-transparent" />
+        <div className="pointer-events-none absolute inset-y-0 -right-[70px] w-[300px] bg-gradient-to-l from-bg to-transparent" />
       </div>
     </section>
   );

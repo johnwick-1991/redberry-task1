@@ -35,8 +35,8 @@ function FieldShell({ id, label, error, hint, children }: FieldShellProps) {
 const controlClass = (error?: string) =>
   clsx(
     'h-10 w-full rounded-xl border bg-surface px-4 text-xs font-semibold text-ink placeholder:text-muted outline-none transition-colors',
-    'focus:border-disabled disabled:cursor-not-allowed disabled:text-muted',
-    error ? 'border-bad focus:border-bad' : 'border-transparent',
+    'disabled:cursor-not-allowed disabled:text-muted',
+    error ? 'border-bad' : 'border-transparent focus:border-disabled',
   );
 
 /** Valid: green check. Invalid: red warning mark. */
