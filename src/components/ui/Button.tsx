@@ -2,7 +2,7 @@ import clsx from 'clsx';
 import type { ButtonHTMLAttributes, ReactNode } from 'react';
 import { Spinner } from './Spinner';
 
-type Variant = 'primary' | 'secondary' | 'ghost' | 'danger';
+type Variant = 'primary' | 'secondary' | 'ghost' | 'danger' | 'light';
 type Size = 'sm' | 'md' | 'lg';
 
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
@@ -14,22 +14,23 @@ interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 }
 
 const variants: Record<Variant, string> = {
-  primary: 'bg-accent text-white hover:bg-accent-hover shadow-lg shadow-accent/20',
-  secondary: 'bg-surface-3 text-ink hover:bg-line border border-line',
-  ghost: 'text-ink hover:bg-surface-3',
-  danger: 'bg-transparent text-bad border border-bad/50 hover:bg-bad/10',
+  primary: 'bg-accent text-white hover:bg-accent-hover disabled:bg-disabled disabled:text-muted',
+  secondary: 'bg-tint-white text-ink hover:bg-white/15 disabled:opacity-40',
+  ghost: 'text-ink hover:bg-tint-white disabled:opacity-40',
+  danger: 'bg-tint-white text-ink hover:bg-tint-red hover:text-accent disabled:opacity-40',
+  light: 'bg-white text-bg hover:bg-white/90 disabled:opacity-40',
 };
 
 const sizes: Record<Size, string> = {
-  sm: 'h-8 px-3 text-sm',
-  md: 'h-10 px-4 text-sm',
-  lg: 'h-12 px-6 text-base',
+  sm: 'px-[22px] py-[10px] text-sm',
+  md: 'px-[22px] py-[13px] text-sm',
+  lg: 'px-[28px] py-[15px] text-base',
 };
 
 /** Same look as Button, for router links that should read as buttons. */
 export function buttonClasses(variant: Variant = 'primary', size: Size = 'md', className?: string) {
   return clsx(
-    'inline-flex cursor-pointer items-center justify-center gap-2 rounded-lg font-semibold transition-colors',
+    'inline-flex cursor-pointer items-center justify-center gap-1 rounded-full font-extrabold leading-none whitespace-nowrap transition-colors',
     'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent',
     variants[variant],
     sizes[size],
@@ -54,9 +55,9 @@ export function Button({
       disabled={disabled || loading}
       aria-busy={loading || undefined}
       className={clsx(
-        'inline-flex cursor-pointer items-center justify-center gap-2 rounded-lg font-semibold transition-colors',
+        'inline-flex cursor-pointer items-center justify-center gap-1 rounded-full font-extrabold leading-none whitespace-nowrap transition-colors',
         'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent',
-        'disabled:cursor-not-allowed disabled:opacity-50 disabled:shadow-none',
+        'disabled:cursor-not-allowed',
         variants[variant],
         sizes[size],
         className,

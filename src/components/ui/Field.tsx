@@ -1,43 +1,50 @@
 import clsx from 'clsx';
 import type { InputHTMLAttributes, ReactNode, Ref, SelectHTMLAttributes } from 'react';
-import { CheckIcon } from './icons';
+import { ChevronDown, FigmaIcon } from './icons';
 
 interface FieldShellProps {
   id: string;
   label: string;
   required?: boolean;
   error?: string;
-  valid?: boolean;
   hint?: ReactNode;
   children: ReactNode;
 }
 
-/** Label + control + inline error. Valid: green border and check. Invalid: red border and message. */
-function FieldShell({ id, label, required, error, hint, children }: FieldShellProps) {
+/** Label + control + inline error, as in the Figma "Input" component. */
+function FieldShell({ id, label, error, hint, children }: FieldShellProps) {
   return (
-    <div className="flex flex-col gap-1.5">
-      <label htmlFor={id} className="text-sm font-medium text-ink">
-        {label}
-        {required && <span className="ml-0.5 text-accent">*</span>}
-      </label>
-      {children}
+    <div className="flex flex-col gap-2">
+      <div className="flex flex-col gap-2.5">
+        <label htmlFor={id} className={clsx('text-xs font-semibold', error ? 'text-bad' : 'text-ink')}>
+          {label}
+        </label>
+        {children}
+      </div>
       {error ? (
-        <p id={`${id}-error`} role="alert" className="text-xs text-bad">
+        <p id={`${id}-error`} role="alert" className="text-xs font-semibold text-bad">
           {error}
         </p>
       ) : (
-        hint && <p className="text-xs text-muted">{hint}</p>
+        hint && <p className="text-xs font-semibold text-muted">{hint}</p>
       )}
     </div>
   );
 }
 
-const controlClass = (error?: string, valid?: boolean) =>
+const controlClass = (error?: string) =>
   clsx(
-    'h-11 w-full rounded-lg border bg-surface-2 px-3.5 text-sm text-ink placeholder:text-muted/70 outline-none transition-colors',
-    'focus:border-ink/40 disabled:cursor-not-allowed disabled:opacity-60',
-    error ? 'border-bad focus:border-bad' : valid ? 'border-ok/70' : 'border-line',
+    'h-10 w-full rounded-xl border bg-surface px-4 text-xs font-semibold text-ink placeholder:text-muted outline-none transition-colors',
+    'focus:border-disabled disabled:cursor-not-allowed disabled:text-muted',
+    error ? 'border-bad focus:border-bad' : 'border-transparent',
   );
+
+/** Valid: green check. Invalid: red warning mark. */
+function StateIcon({ error, valid }: { error?: string; valid?: boolean }) {
+  if (error) return <FigmaIcon name="check" className="pointer-events-none absolute right-4 top-1/2 size-3 -translate-y-1/2 text-bad" />;
+  if (valid) return <FigmaIcon name="confirm" className="pointer-events-none absolute right-4 top-1/2 size-3.5 -translate-y-1/2 text-ok" />;
+  return null;
+}
 
 interface TextFieldProps extends InputHTMLAttributes<HTMLInputElement> {
   id: string;
@@ -50,19 +57,18 @@ interface TextFieldProps extends InputHTMLAttributes<HTMLInputElement> {
 
 export function TextField({ id, label, error, valid, hint, required, className, ref, ...rest }: TextFieldProps) {
   return (
-    <FieldShell id={id} label={label} required={required} error={error} valid={valid} hint={hint}>
+    <FieldShell id={id} label={label} required={required} error={error} hint={hint}>
       <div className="relative">
         <input
           id={id}
           ref={ref}
+          required={required}
           aria-invalid={error ? true : undefined}
           aria-describedby={error ? `${id}-error` : undefined}
-          className={clsx(controlClass(error, valid), valid && !error && 'pr-10', className)}
+          className={clsx(controlClass(error), (error || valid) && 'pr-10', className)}
           {...rest}
         />
-        {valid && !error && (
-          <CheckIcon className="pointer-events-none absolute right-3 top-1/2 size-4 -translate-y-1/2 text-ok" />
-        )}
+        <StateIcon error={error} valid={valid} />
       </div>
     </FieldShell>
   );
@@ -77,12 +83,15 @@ interface SelectFieldProps extends SelectHTMLAttributes<HTMLSelectElement> {
   ref?: Ref<HTMLSelectElement>;
 }
 
-export function SelectField({ id, label, error, valid, hint, required, children, ref, ...rest }: SelectFieldProps) {
+export function SelectField({ id, label, error, hint, required, children, ref, ...rest }: SelectFieldProps) {
   return (
-    <FieldShell id={id} label={label} required={required} error={error} valid={valid} hint={hint}>
-      <select id={id} ref={ref} className={clsx(controlClass(error, valid), 'cursor-pointer')} {...rest}>
-        {children}
-      </select>
+    <FieldShell id={id} label={label} required={required} error={error} hint={hint}>
+      <div className="relative">
+        <select id={id} ref={ref} className={clsx(controlClass(error), 'cursor-pointer appearance-none pr-10')} {...rest}>
+          {children}
+        </select>
+        <ChevronDown className="pointer-events-none absolute right-4 top-1/2 size-4 -translate-y-1/2 text-ink" />
+      </div>
     </FieldShell>
   );
 }
@@ -96,13 +105,13 @@ export function FormAlert({
   children: ReactNode;
 }) {
   const tones = {
-    error: 'border-bad/40 bg-bad/10 text-bad',
-    warning: 'border-warn/40 bg-warn/10 text-warn',
-    info: 'border-line bg-surface-2 text-ink',
-    success: 'border-ok/40 bg-ok/10 text-ok',
+    error: 'bg-tint-red text-bad',
+    warning: 'bg-tint-warn text-warn',
+    info: 'bg-surface text-ink',
+    success: 'bg-ok/10 text-ok',
   };
   return (
-    <div role={tone === 'error' ? 'alert' : 'status'} className={clsx('rounded-lg border px-4 py-3 text-sm', tones[tone])}>
+    <div role={tone === 'error' ? 'alert' : 'status'} className={clsx('rounded-xl px-4 py-3 text-xs font-semibold', tones[tone])}>
       {children}
     </div>
   );

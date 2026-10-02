@@ -3,12 +3,14 @@ export function formatPrice(value: number): string {
   return `₾${Number.isInteger(value) ? value : value.toFixed(2)}`;
 }
 
-/** 157 -> "2h 37m" */
+/** 134 -> "134 min", as the design writes runtimes. */
 export function formatRuntime(minutes: number): string {
-  const h = Math.floor(minutes / 60);
-  const m = minutes % 60;
-  if (h === 0) return `${m}m`;
-  return m === 0 ? `${h}h` : `${h}h ${m}m`;
+  return `${minutes} min`;
+}
+
+/** "IN CINEMAS 2 OCTOBER" style: 2 October */
+export function formatDayMonth(iso: string): string {
+  return parseISODate(iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'long' });
 }
 
 /** Local calendar date as YYYY-MM-DD (not UTC, so "today" matches the user's clock). */

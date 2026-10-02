@@ -1,20 +1,25 @@
 @import 'tailwindcss';
 
 @theme {
-  --color-bg: #070b16;
-  --color-surface: #0f1526;
-  --color-surface-2: #161e33;
-  --color-surface-3: #1f2942;
-  --color-line: #263250;
-  --color-ink: #eef1f8;
-  --color-muted: #8f98ae;
-  --color-accent: #e5383b;
-  --color-accent-hover: #f04a4d;
-  --color-ok: #22c55e;
-  --color-warn: #f5b301;
-  --color-bad: #f04452;
+  /* Figma tokens (Redberry Bootcamp XII). */
+  --color-bg: #070c1c; /* bg/page */
+  --color-surface: #1e2031; /* bg/card */
+  --color-surface-2: #1e2031;
+  --color-surface-3: #2a2c3d; /* bg/raised */
+  --color-line: #2a2c3d;
+  --color-ink: #ffffff; /* text/primary */
+  --color-muted: #a9a9a9; /* text/secondary */
+  --color-disabled: #505261; /* text/disabled */
+  --color-accent: #ec3013; /* color/red */
+  --color-accent-hover: #f2492e;
+  --color-ok: #4ade80; /* color/green */
+  --color-warn: #e27e04; /* color/orange */
+  --color-bad: #ec3013;
+  --color-tint-red: rgb(236 48 19 / 0.1);
+  --color-tint-white: rgb(255 255 255 / 0.1);
+  --color-tint-warn: rgb(226 126 4 / 0.1);
 
-  --font-sans: 'Inter', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-sans: 'Archivo', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
 
   --animate-fade-in: fade-in 0.25s ease-out;
   --animate-pop-in: pop-in 0.22s cubic-bezier(0.2, 0.8, 0.2, 1);
@@ -58,8 +63,18 @@ body {
   display: none;
 }
 
+/* Icons exported from Figma, tinted with currentColor through a mask. */
+.mask-icon {
+  display: inline-block;
+  flex-shrink: 0;
+  background-color: currentColor;
+  mask-repeat: no-repeat;
+  mask-position: center;
+  mask-size: contain;
+}
+
 input[type='date']::-webkit-calendar-picker-indicator {
-  filter: invert(0.8);
+  background: url(/figma/calendar.svg) center / 14px no-repeat;
   cursor: pointer;
 }
 

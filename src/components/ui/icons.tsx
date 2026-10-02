@@ -59,3 +59,15 @@ export const FilmIcon = (p: IconProps) => (
 export const UploadIcon = (p: IconProps) => (
   <svg {...base(p)}><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12" /></svg>
 );
+
+/** Icon exported from the Figma file (public/figma), drawn in the current text colour. */
+export function FigmaIcon({ name, className }: { name: string; className?: string }) {
+  const url = `url(/figma/${name}.svg)`;
+  return (
+    <span
+      aria-hidden="true"
+      className={`mask-icon ${className ?? 'size-4'}`}
+      style={{ maskImage: url, WebkitMaskImage: url }}
+    />
+  );
+}

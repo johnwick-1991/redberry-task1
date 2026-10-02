@@ -21,12 +21,12 @@ export function EmptyState({
   return (
     <div
       className={clsx(
-        'flex flex-col items-center justify-center gap-3 rounded-2xl border border-dashed border-line bg-surface/60 px-6 py-14 text-center',
+        'flex flex-col items-center justify-center gap-3 rounded-[20px] bg-surface px-6 py-14 text-center',
         className,
       )}
     >
       {icon && <div className="text-muted">{icon}</div>}
-      <h3 className="text-lg font-semibold">{title}</h3>
+      <h3 className="text-lg font-extrabold">{title}</h3>
       {description && <p className="max-w-md text-sm text-muted">{description}</p>}
       {action && <div className="mt-2">{action}</div>}
     </div>
@@ -49,12 +49,12 @@ export function ErrorState({
     <div
       role="alert"
       className={clsx(
-        'flex flex-col items-center justify-center gap-3 rounded-2xl border border-bad/30 bg-bad/5 px-6 py-12 text-center',
+        'flex flex-col items-center justify-center gap-3 rounded-[20px] bg-surface px-6 py-12 text-center',
         className,
       )}
     >
       <AlertIcon className="size-8 text-bad" />
-      <h3 className="text-lg font-semibold">{title}</h3>
+      <h3 className="text-lg font-extrabold">{title}</h3>
       <p className="max-w-md text-sm text-muted">{errorMessage(error)}</p>
       {onRetry && (
         <Button variant="secondary" onClick={onRetry} className="mt-1">
@@ -65,21 +65,13 @@ export function ErrorState({
   );
 }
 
-const ratingColors: Record<string, string> = {
-  G: 'bg-ok/15 text-ok border-ok/40',
-  PG: 'bg-sky-500/15 text-sky-300 border-sky-400/40',
-  '12+': 'bg-warn/15 text-warn border-warn/40',
-  '16+': 'bg-orange-500/15 text-orange-300 border-orange-400/40',
-  '18+': 'bg-bad/15 text-bad border-bad/40',
-};
-
+/** Age rating pill: red tint, as on every card in the design. */
 export function AgeBadge({ rating, className }: { rating: AgeRating; className?: string }) {
   return (
     <span
       title={rating.description}
       className={clsx(
-        'inline-flex h-6 items-center rounded-md border px-1.5 text-xs font-bold',
-        ratingColors[rating.code] ?? 'border-line bg-surface-3 text-ink',
+        'inline-flex items-center rounded-full bg-tint-red px-2 py-1 text-xs font-semibold leading-none text-accent',
         className,
       )}
     >
@@ -88,11 +80,21 @@ export function AgeBadge({ rating, className }: { rating: AgeRating; className?:
   );
 }
 
-export function Chip({ children, className }: { children: ReactNode; className?: string }) {
+/** Neutral pill (formats, runtime). `raised` is the solid variant used on session cards. */
+export function Chip({
+  children,
+  className,
+  tone = 'tint',
+}: {
+  children: ReactNode;
+  className?: string;
+  tone?: 'tint' | 'raised';
+}) {
   return (
     <span
       className={clsx(
-        'inline-flex h-6 items-center rounded-md border border-line bg-surface-3 px-2 text-xs font-semibold uppercase tracking-wide',
+        'inline-flex items-center gap-1 rounded-full text-xs font-semibold leading-none text-ink',
+        tone === 'raised' ? 'bg-surface-3 px-2.5 py-[5px]' : 'bg-tint-white px-3 py-1.5',
         className,
       )}
     >
