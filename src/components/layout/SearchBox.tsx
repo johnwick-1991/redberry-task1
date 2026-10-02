@@ -2,9 +2,9 @@ import clsx from 'clsx';
 import { useEffect, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useSearch } from '@/api/queries';
-import { formatRuntime } from '@/lib/format';
+import { formatPrice, formatRuntime } from '@/lib/format';
 import { AgeBadge } from '@/components/ui/States';
-import { SearchIcon } from '@/components/ui/icons';
+import { FilmIcon, SearchIcon } from '@/components/ui/icons';
 import { Spinner } from '@/components/ui/Spinner';
 
 function useDebounced<T>(value: T, delay: number): T {
@@ -42,7 +42,18 @@ export function SearchBox() {
     navigate(`/movies/${slug}`);
   };
 
-  const showPanel = open && debounced.trim().length > 0;
+  const query = debounced.trim();
+  const showPanel = open;
+
+  const browseAll = (
+    <Link
+      to="/sessions"
+      onClick={() => setOpen(false)}
+      className="mt-3 inline-flex rounded-full bg-surface-3 px-4 py-2 text-xs font-semibold hover:bg-line"
+    >
+      Browse all sessions
+    </Link>
+  );
 
   return (
     <div ref={wrapRef} className="relative w-80">
@@ -68,46 +79,77 @@ export function SearchBox() {
             setOpen(false);
           }
         }}
-        placeholder="Search films"
+        placeholder="Search films and live events"
         aria-label="Search films"
         className="h-10 w-full rounded-full border border-line bg-surface-2 pl-9 pr-9 text-sm outline-none transition-colors placeholder:text-muted focus:border-ink/40"
       />
       {isFetching && <Spinner className="absolute right-3 top-1/2 size-4 -translate-y-1/2 text-muted" />}
 
       {showPanel && (
-        <div className="absolute left-0 right-0 top-12 z-40 animate-fade-in overflow-hidden rounded-xl border border-line bg-surface shadow-2xl">
+        <div className="absolute right-0 top-12 z-40 w-[26rem] animate-fade-in overflow-hidden rounded-xl border border-line bg-surface shadow-2xl">
           {isError ? (
             <p className="px-4 py-3 text-sm text-bad">Search failed. Please try again.</p>
+          ) : !query ? (
+            <div className="flex flex-col items-center px-6 py-6 text-center">
+              <span className="grid size-10 place-items-center rounded-full bg-surface-3 text-muted">
+                <FilmIcon className="size-5" />
+              </span>
+              <p className="mt-3 text-sm font-semibold">What do you want to watch?</p>
+              <p className="mt-1 text-xs text-muted">Search by film or event title.</p>
+              {browseAll}
+            </div>
           ) : data.length === 0 && !isFetching ? (
-            <p className="px-4 py-3 text-sm text-muted">No films match “{debounced.trim()}”.</p>
+            <div className="flex flex-col items-center px-6 py-6 text-center">
+              <span className="grid size-10 place-items-center rounded-full bg-surface-3 text-muted">
+                <SearchIcon className="size-5" />
+              </span>
+              <p className="mt-3 text-sm font-semibold">No results for “{query}”</p>
+              <p className="mt-1 text-xs text-muted">Check the spelling or try another film or live event.</p>
+              {browseAll}
+            </div>
           ) : (
-            <ul role="listbox">
-              {data.map((m, i) => (
-                <li key={m.id} role="option" aria-selected={i === active}>
-                  <Link
-                    to={`/movies/${m.slug}`}
-                    onClick={() => {
-                      setOpen(false);
-                      setTerm('');
-                    }}
-                    onMouseEnter={() => setActive(i)}
-                    className={clsx('flex items-center gap-3 px-3 py-2', i === active && 'bg-surface-3')}
-                  >
-                    <div className="h-14 w-10 shrink-0 overflow-hidden rounded bg-surface-3">
-                      {m.posterUrl && <img src={m.posterUrl} alt="" className="size-full object-cover" />}
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <p className="truncate text-sm font-semibold">{m.title}</p>
-                      <p className="flex items-center gap-2 text-xs text-muted">
-                        <AgeBadge rating={m.ageRating} className="h-5 text-[10px]" />
-                        {formatRuntime(m.runtimeMinutes)}
-                        {m.isComingSoon && <span className="text-warn">Coming soon</span>}
-                      </p>
-                    </div>
-                  </Link>
-                </li>
-              ))}
-            </ul>
+            <>
+              <p className="flex items-center justify-between px-4 pb-1 pt-3 text-[11px] font-bold uppercase tracking-wider text-muted">
+                <span>Films &amp; events</span>
+                <span className="normal-case tracking-normal">
+                  {data.length} {data.length === 1 ? 'result' : 'results'}
+                </span>
+              </p>
+              <ul role="listbox">
+                {data.map((m, i) => (
+                  <li key={m.id} role="option" aria-selected={i === active}>
+                    <Link
+                      to={`/movies/${m.slug}`}
+                      onClick={() => {
+                        setOpen(false);
+                        setTerm('');
+                      }}
+                      onMouseEnter={() => setActive(i)}
+                      className={clsx('flex items-center gap-3 px-3 py-2', i === active && 'bg-surface-3')}
+                    >
+                      <div className="h-14 w-10 shrink-0 overflow-hidden rounded bg-surface-3">
+                        {m.posterUrl && <img src={m.posterUrl} alt="" className="size-full object-cover" />}
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate text-sm font-semibold">{m.title}</p>
+                        <p className="flex items-center gap-2 text-xs text-muted">
+                          {m.kind === 'event' ? 'Event' : 'Film'}
+                          <AgeBadge rating={m.ageRating} className="h-5 text-[10px]" />
+                          {formatRuntime(m.runtimeMinutes)}
+                        </p>
+                      </div>
+                      {m.isComingSoon ? (
+                        <span className="shrink-0 text-xs font-semibold text-warn">Coming soon</span>
+                      ) : (
+                        m.fromPrice !== null && (
+                          <span className="shrink-0 text-xs font-semibold">from {formatPrice(m.fromPrice)}</span>
+                        )
+                      )}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </>
           )}
         </div>
       )}
