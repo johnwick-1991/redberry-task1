@@ -31,6 +31,10 @@ src/
   features/     auth, home, sessions, movie, booking, profile
 ```
 
+## Design
+
+Built to the Figma file at its 1728px frame size (and checked at 1920×1080). Colours, type (Archivo 400/600/800) and radii are the file's tokens, defined once in `src/index.css`. Icons are the SVGs exported from Figma (`public/figma/`), drawn through a small `FigmaIcon` component that tints them with a CSS mask, so they match the design exactly without an icon library.
+
 ## Notable behaviour
 
 - **Protected actions continue after login.** Guarded actions (Select Seats, Notify Me, My Tickets, Profile) are queued as pending and run automatically after login or sign-up. A 401 from any request parks that request, opens the login modal, and replays it with the new token, so the user never clicks twice.
