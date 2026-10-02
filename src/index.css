@@ -19,7 +19,7 @@
   --color-tint-white: rgb(255 255 255 / 0.1);
   --color-tint-warn: rgb(226 126 4 / 0.1);
 
-  --font-sans: 'Archivo', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-sans: 'Archivo', 'Noto Sans', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
 
   --animate-fade-in: fade-in 0.25s ease-out;
   --animate-pop-in: pop-in 0.22s cubic-bezier(0.2, 0.8, 0.2, 1);
