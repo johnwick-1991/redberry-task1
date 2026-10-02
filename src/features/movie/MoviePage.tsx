@@ -1,4 +1,4 @@
-import { useEffect, type ReactNode } from 'react';
+import { useEffect, useRef, type ReactNode } from 'react';
 import { Link, useParams, useSearchParams } from 'react-router-dom';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import type { MovieDetail } from '@/api/types';
@@ -63,9 +63,27 @@ function SessionsSection({ movie }: { movie: MovieDetail }) {
   const raw = params.get('date');
   const date = raw && isWithinNextSevenDays(raw) ? raw : todayISO();
   const user = useAuthStore((s) => s.user);
+  const authReady = useAuthStore((s) => s.ready);
   const startBooking = useStartBooking();
   const sessions = useMovieSessions(movie.slug, date);
   const blocked = isAgeRestricted(user, movie.ageRating);
+
+  // Arriving from a session card (`?session=<id>`): open seat selection straight away.
+  // Waits for the session restore so a signed-in user isn't asked to log in again.
+  const requested = Number(params.get('session')) || null;
+  const handled = useRef<number | null>(null);
+  useEffect(() => {
+    if (!requested || !authReady || handled.current === requested) return;
+    handled.current = requested;
+    setParams(
+      (p) => {
+        p.delete('session');
+        return p;
+      },
+      { replace: true, preventScrollReset: true },
+    );
+    startBooking(requested, movie.ageRating);
+  }, [requested, authReady, setParams, startBooking, movie.ageRating]);
 
   return (
     <section id="sessions" className="mx-auto max-w-[1600px] scroll-mt-24 px-10 pt-14">

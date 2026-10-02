@@ -1,10 +1,10 @@
 import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import type { SessionGroup } from '@/api/types';
 import { useFilterOptions, useSessions } from '@/api/queries';
 import { useAuthStore } from '@/store/auth';
 import { formatLongDate, formatRuntime } from '@/lib/format';
-import { ageRestrictionMessage, isAgeRestricted, useStartBooking } from '@/lib/guards';
+import { ageRestrictionMessage, isAgeRestricted } from '@/lib/guards';
 import { Poster } from '@/components/MovieCards';
 import { SessionButton } from '@/components/SessionButton';
 import { Button } from '@/components/ui/Button';
@@ -17,7 +17,7 @@ import { DEFAULT_SORT, useSessionsUrlState } from './useSessionsUrlState';
 
 function MovieGroup({ group }: { group: SessionGroup }) {
   const user = useAuthStore((s) => s.user);
-  const startBooking = useStartBooking();
+  const navigate = useNavigate();
   const { movie, sessions } = group;
   const blocked = isAgeRestricted(user, movie.ageRating);
 
@@ -49,7 +49,8 @@ function MovieGroup({ group }: { group: SessionGroup }) {
               key={s.id}
               session={s}
               blocked={blocked}
-              onSelect={() => startBooking(s.id, movie.ageRating)}
+              // Per the design: open the film's page, which then opens seat selection for this session.
+              onSelect={() => navigate(`/movies/${movie.slug}?date=${s.date}&session=${s.id}`)}
             />
           ))}
         </div>
