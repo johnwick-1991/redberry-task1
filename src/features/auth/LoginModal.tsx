@@ -59,7 +59,7 @@ export function LoginModal() {
   const isValid = (name: keyof LoginValues) => (touchedFields[name] || dirtyFields[name]) && !errors[name];
 
   return (
-    <Modal open={modal === 'login'} onClose={close} title="Log in" size="sm">
+    <Modal open={modal === 'login'} onClose={close} title="Log in" subtitle="Welcome back to Kino XII" size="sm">
       <form
         noValidate
         onSubmit={handleSubmit((values) => {
@@ -67,7 +67,7 @@ export function LoginModal() {
           setApiError(null);
           mutation.mutate(values);
         })}
-        className="flex flex-col gap-4"
+        className="flex flex-col gap-6"
       >
         {notice && <FormAlert tone="warning">{notice}</FormAlert>}
         {apiError && <FormAlert>{apiError}</FormAlert>}
@@ -78,7 +78,7 @@ export function LoginModal() {
           type="email"
           autoComplete="email"
           required
-          placeholder="you@example.com"
+          placeholder="example@gmail.com"
           error={errors.email?.message}
           valid={!!isValid('email')}
           {...register('email')}
@@ -88,17 +88,18 @@ export function LoginModal() {
           label="Password"
           type="password"
           autoComplete="current-password"
+          placeholder="••••••••"
           required
           error={errors.password?.message}
           valid={!!isValid('password')}
           {...register('password')}
         />
 
-        <Button type="submit" size="lg" loading={mutation.isPending} className="mt-1 w-full">
-          Log In
+        <Button type="submit" loading={mutation.isPending} className="w-full">
+          Log in
         </Button>
 
-        <p className="text-center text-sm text-muted">
+        <p className="-mt-1 text-center text-sm text-muted">
           Don&apos;t have an account?{' '}
           <button
             type="button"
@@ -106,14 +107,11 @@ export function LoginModal() {
               setApiError(null);
               switchTo('register');
             }}
-            className="cursor-pointer font-semibold text-accent hover:underline"
+            className="cursor-pointer font-extrabold text-accent hover:underline"
           >
-            Sign Up
+            Sign up
           </button>
         </p>
-        <Button variant="ghost" onClick={close} className="-mt-2 w-full">
-          Close
-        </Button>
       </form>
     </Modal>
   );

@@ -10,7 +10,6 @@ import { registerSchema, type RegisterValues } from '@/lib/validation';
 import { Modal } from '@/components/ui/Modal';
 import { Button } from '@/components/ui/Button';
 import { FormAlert, TextField } from '@/components/ui/Field';
-import { UploadIcon, UserIcon, XIcon } from '@/components/ui/icons';
 
 const FIELDS = ['username', 'email', 'password', 'password_confirmation', 'avatar'] as const;
 
@@ -79,7 +78,7 @@ export function RegisterModal() {
     (touchedFields[name] || dirtyFields[name]) && !errors[name];
 
   return (
-    <Modal open={modal === 'register'} onClose={close} title="Create an account" size="md">
+    <Modal open={modal === 'register'} onClose={close} title="Sign up" subtitle="Welcome to Kino XII" size="md">
       <form
         noValidate
         onSubmit={handleSubmit((values) => {
@@ -87,43 +86,46 @@ export function RegisterModal() {
           setApiError(null);
           mutation.mutate(values);
         })}
-        className="flex flex-col gap-4"
+        className="flex flex-col gap-6"
       >
         {apiError && <FormAlert>{apiError}</FormAlert>}
 
         {/* Avatar (optional) with live preview */}
-        <div className="flex items-center gap-4">
-          <div className="grid size-20 shrink-0 place-items-center overflow-hidden rounded-full border border-line bg-surface-2">
+        <div className="flex items-center gap-3">
+          <button
+            type="button"
+            onClick={() => fileRef.current?.click()}
+            aria-label={avatar ? 'Change avatar' : 'Upload avatar'}
+            className="grid size-10 shrink-0 cursor-pointer place-items-center overflow-hidden rounded-lg border-[0.5px] border-dashed border-surface-3 bg-tint-white transition-colors hover:bg-white/15"
+          >
             {preview ? (
               <img src={preview} alt="Avatar preview" className="size-full object-cover" />
             ) : (
-              <UserIcon className="size-8 text-muted" />
+              <img src="/figma/upload.svg" alt="" className="h-[11px] w-3" />
             )}
-          </div>
-          <div className="flex flex-col gap-1.5">
-            <div className="flex gap-2">
-              <Button variant="secondary" size="sm" icon={<UploadIcon className="size-4" />} onClick={() => fileRef.current?.click()}>
-                {avatar ? 'Change avatar' : 'Upload avatar'}
-              </Button>
+          </button>
+          <div className="flex flex-col gap-[3px]">
+            <p className="flex items-center gap-2 text-sm font-extrabold">
+              {avatar ? 'Avatar selected' : 'Upload avatar (optional)'}
               {avatar && (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  icon={<XIcon className="size-4" />}
+                <button
+                  type="button"
+                  className="cursor-pointer text-xs font-semibold text-accent hover:underline"
                   onClick={() => {
                     setValue('avatar', null, { shouldValidate: true });
                     if (fileRef.current) fileRef.current.value = '';
                   }}
                 >
                   Remove
-                </Button>
+                </button>
               )}
-            </div>
-            <p className="text-xs text-muted">Optional · JPG, PNG or WebP, up to 2MB</p>
-            {errors.avatar?.message && (
+            </p>
+            {errors.avatar?.message ? (
               <p role="alert" className="text-xs text-bad">
                 {errors.avatar.message}
               </p>
+            ) : (
+              <p className="text-xs text-muted">JPG, PNG or WEBP</p>
             )}
           </div>
           <input
@@ -143,6 +145,7 @@ export function RegisterModal() {
           label="Username"
           required
           autoComplete="username"
+          placeholder="User"
           error={errors.username?.message}
           valid={!!isValid('username')}
           {...register('username')}
@@ -153,17 +156,19 @@ export function RegisterModal() {
           type="email"
           required
           autoComplete="email"
+          placeholder="example@gmail.com"
           error={errors.email?.message}
           valid={!!isValid('email')}
           {...register('email')}
         />
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-2 gap-3">
           <TextField
             id="reg-password"
             label="Password"
             type="password"
             required
             autoComplete="new-password"
+            placeholder="••••••••"
             error={errors.password?.message}
             valid={!!isValid('password')}
             {...register('password', {
@@ -173,21 +178,22 @@ export function RegisterModal() {
           />
           <TextField
             id="reg-password-confirm"
-            label="Confirm Password"
+            label="Confirm password"
             type="password"
             required
             autoComplete="new-password"
+            placeholder="••••••••"
             error={errors.password_confirmation?.message}
             valid={!!isValid('password_confirmation')}
             {...register('password_confirmation')}
           />
         </div>
 
-        <Button type="submit" size="lg" loading={mutation.isPending} className="mt-1 w-full">
-          Sign Up
+        <Button type="submit" loading={mutation.isPending} className="w-full">
+          Sign up
         </Button>
 
-        <p className="text-center text-sm text-muted">
+        <p className="-mt-1 text-center text-sm text-muted">
           Already have an account?{' '}
           <button
             type="button"
@@ -195,14 +201,11 @@ export function RegisterModal() {
               resetAll();
               switchTo('login');
             }}
-            className="cursor-pointer font-semibold text-accent hover:underline"
+            className="cursor-pointer font-extrabold text-accent hover:underline"
           >
-            Log In
+            Log in
           </button>
         </p>
-        <Button variant="ghost" onClick={close} className="-mt-2 w-full">
-          Close
-        </Button>
       </form>
     </Modal>
   );
